@@ -11,9 +11,19 @@ export async function POST(req: Request) {
     }
 
     const normalizedEmail = email.toLowerCase().trim();
-    // Generate secure 6-digit code
+    const now = Date.now();
+    const resendWindowMs = 60 * 1000;
+    const previous = inMemoryStore.otps.get(normalizedEmail);
+
+    if (previous && previous.expiresAt > now && now - (previous.expiresAt - 10 * 60 * 1000) < resendWindowMs) {
+      return NextResponse.json({
+        success: false,
+        error: "A verification code was already sent recently. Please wait before requesting another one.",
+      }, { status: 429 });
+    }
+
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+    const expiresAt = now + 10 * 60 * 1000;
 
     const db = getDb();
     if (db) {
@@ -29,7 +39,6 @@ export async function POST(req: Request) {
       }
     }
 
-    // Save in memory store
     inMemoryStore.otps.set(normalizedEmail, {
       code,
       expiresAt,
@@ -41,7 +50,6 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       message: `A 6-digit verification code has been sent to ${normalizedEmail}.`,
-      // For developer/testing ease, also include preview code in simulated environment
       devCode: process.env.NODE_ENV !== "production" ? code : undefined,
     });
   } catch (error: any) {

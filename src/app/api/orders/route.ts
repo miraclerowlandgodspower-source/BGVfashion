@@ -12,7 +12,7 @@ export async function GET() {
     }
 
     const db = getDb();
-    let userOrders: any[] = [];
+    const userOrders: any[] = [];
 
     if (db) {
       try {

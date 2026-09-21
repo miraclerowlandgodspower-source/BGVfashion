@@ -51,6 +51,7 @@ export async function POST(req: Request) {
       name: name.trim(),
       email: normalizedEmail,
       role: "customer",
+      accountStatus: "EMAIL_UNVERIFIED",
     };
 
     if (db) {
@@ -61,6 +62,7 @@ export async function POST(req: Request) {
           email: normalizedEmail,
           passwordHash: hashedPassword,
           role: "customer",
+          accountStatus: "EMAIL_UNVERIFIED",
         });
       } catch (err) {
         console.warn("Could not insert user into DB, using fallback memory:", err);
@@ -78,25 +80,11 @@ export async function POST(req: Request) {
       });
     }
 
-    const token = await createSessionToken(newUserObj);
-
-    const response = NextResponse.json({
+    return NextResponse.json({
       success: true,
-      message: "Account created successfully!",
+      message: "Account created. Please verify your email to continue.",
       data: { user: newUserObj },
     });
-
-    response.cookies.set({
-      name: COOKIE_NAME,
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 30 * 24 * 60 * 60, // 30 days
-    });
-
-    return response;
   } catch (error: any) {
     console.error("Registration error:", error);
     return NextResponse.json(

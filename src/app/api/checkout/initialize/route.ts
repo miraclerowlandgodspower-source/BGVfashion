@@ -4,6 +4,7 @@ import { getDb, inMemoryStore, getProductById } from "@/lib/db";
 import * as schema from "@/db/schema";
 import { initializePaystackTransaction } from "@/lib/paystack";
 import { calculateShippingFee } from "@/lib/shipping";
+import { Order } from "@/types";
 
 export async function POST(req: Request) {
   try {
@@ -126,7 +127,7 @@ export async function POST(req: Request) {
     }
 
     // In-memory store
-    const orderRecord = {
+    const orderRecord: Order = {
       id: orderId,
       orderNumber,
       userId: user?.id || null,

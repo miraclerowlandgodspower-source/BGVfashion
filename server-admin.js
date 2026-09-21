@@ -2,12 +2,12 @@ const { createServer } = require("http");
 const { parse } = require("url");
 const next = require("next");
 
-// Unified Server: enable admin portal by default so /admin is accessible
+// Set environment variable to enable admin portal on this server
 process.env.ENABLE_ADMIN_PORTAL = process.env.ENABLE_ADMIN_PORTAL || "true";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = process.env.HOSTNAME || "localhost";
-const port = parseInt(process.env.PORT || "3000", 10);
+const port = parseInt(process.env.PORT || "3001", 10);
 
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
@@ -24,11 +24,12 @@ app.prepare().then(() => {
     }
   })
     .once("error", (err) => {
-      console.error("Server error:", err);
+      console.error("Admin Server error:", err);
       process.exit(1);
     })
     .listen(port, () => {
-      console.log(`> BGV Fashion Server ready on http://${hostname}:${port}`);
+      console.log(`> BGV Fashion Admin Portal Server ready on http://${hostname}:${port}`);
       console.log(`> Environment: ${dev ? "development" : "production"}`);
+      console.log(`> Admin Portal Route: http://${hostname}:${port}/admin`);
     });
 });

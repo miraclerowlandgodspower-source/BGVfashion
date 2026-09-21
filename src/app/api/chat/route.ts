@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     }
 
     const db = getDb();
-    let convId = conversationId || crypto.randomUUID();
+    const convId = conversationId || crypto.randomUUID();
     const msgId = crypto.randomUUID();
 
     const newMsg = {

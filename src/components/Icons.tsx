@@ -153,27 +153,22 @@ export function SnapchatIcon({ className = "icon", size = 20 }: IconProps) {
   );
 }
 
-/* --- PAYMENT PROVIDER TRUST BADGES --- */
+export function PaystackIcon({ width = 44, height = 26 }: { width?: number; height?: number }) {
+  return (
+    <svg width={width} height={height} viewBox="0 0 38 24" fill="none" aria-label="Paystack">
+      <rect width="38" height="24" rx="4" fill="#092A5E"/>
+      <path d="M10 8h18v2.5H10V8zm0 5h18v2.5H10V13zm0 5h12v2.5H10V18z" fill="#0BA4DB"/>
+    </svg>
+  );
+}
+
+/* --- EXCLUSIVE PAYSTACK PAYMENT BADGE --- */
 export function PaymentBadges() {
   return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
-      <span style={{ padding: "4px 8px", background: "#fff", border: "1px solid var(--line)", fontSize: "0.75rem", fontWeight: 800, color: "#1a1f71" }}>
-        VISA
-      </span>
-      <span style={{ padding: "4px 8px", background: "#fff", border: "1px solid var(--line)", fontSize: "0.75rem", fontWeight: 800, color: "#eb001b" }}>
-        Mastercard
-      </span>
-      <span style={{ padding: "4px 8px", background: "#fff", border: "1px solid var(--line)", fontSize: "0.75rem", fontWeight: 800, color: "#008752" }}>
-        Verve
-      </span>
-      <span style={{ padding: "4px 8px", background: "#fff", border: "1px solid var(--line)", fontSize: "0.75rem", fontWeight: 800, color: "#000" }}>
-         Apple Pay
-      </span>
-      <span style={{ padding: "4px 8px", background: "#fff", border: "1px solid var(--line)", fontSize: "0.75rem", fontWeight: 800, color: "#4285f4" }}>
-        G Pay
-      </span>
-      <span style={{ padding: "4px 8px", background: "#fff", border: "1px solid var(--line)", fontSize: "0.75rem", fontWeight: 800, color: "#0ba4db" }}>
-        Paystack
+    <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", background: "rgba(255, 255, 255, 0.08)", padding: "8px 14px", borderRadius: "8px", border: "1px solid rgba(255, 255, 255, 0.15)" }}>
+      <PaystackIcon width={40} height={24} />
+      <span style={{ fontSize: "0.75rem", fontWeight: 800, color: "#fff", letterSpacing: "0.05em" }}>
+        Secured by Paystack
       </span>
     </div>
   );

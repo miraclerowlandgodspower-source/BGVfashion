@@ -33,6 +33,10 @@ export function Header() {
     }
   };
 
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
+
   return (
     <header>
       {/* Top Banner with Social links & Free Shipping Announcement */}
@@ -93,17 +97,6 @@ export function Header() {
             }}
           >
             <TruckIcon size={14} /> Track Order
-          </Link>
-          <Link
-            href="/admin"
-            style={{
-              color: "var(--coral)",
-              fontSize: "0.75rem",
-              fontWeight: 800,
-              textDecoration: "underline",
-            }}
-          >
-            Admin
           </Link>
         </div>
       </div>

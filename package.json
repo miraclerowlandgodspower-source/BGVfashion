@@ -6,6 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "admin:create": "node scripts/create-admin.js",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
     "lint": "eslint"
   },
   "dependencies": {

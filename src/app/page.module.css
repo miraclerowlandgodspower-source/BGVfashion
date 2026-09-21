@@ -107,7 +107,7 @@ a.secondary {
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 599px) {
   .main {
     padding: 48px 24px;
   }
@@ -120,6 +120,24 @@ a.secondary {
     font-size: 32px;
     line-height: 40px;
     letter-spacing: -1.92px;
+  }
+}
+
+@media only screen and (min-width: 600px) and (max-width: 767px) {
+  .main {
+    padding: 64px 36px;
+  }
+}
+
+@media only screen and (min-width: 768px) {
+  .main {
+    padding: 96px 48px;
+  }
+}
+
+@media only screen and (min-width: 1200px) {
+  .main {
+    padding: 120px 60px;
   }
 }
 

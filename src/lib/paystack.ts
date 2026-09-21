@@ -89,25 +89,8 @@ export async function verifyPaystackTransaction(
 ): Promise<PaystackVerifyResponse> {
   const secret = process.env.PAYSTACK_SECRET_KEY;
 
-  // If in simulated dev mode
-  if (!secret || secret.startsWith("sk_test_demo") || secret === "sk_test_your_paystack_secret_key_here") {
-    return {
-      status: true,
-      message: "Verification successful (development mode)",
-      data: {
-        id: Math.floor(Math.random() * 100000),
-        status: "success",
-        reference,
-        amount: 0,
-        currency: "NGN",
-        paid_at: new Date().toISOString(),
-        customer: {
-          id: 1,
-          email: "customer@example.com",
-          customer_code: "CUS_dev123",
-        },
-      },
-    };
+  if (!secret || secret === "sk_test_your_paystack_secret_key_here") {
+    throw new Error("Paystack secret key is not configured on the server. Server-side payment verification requires a valid PAYSTACK_SECRET_KEY.");
   }
 
   const response = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {

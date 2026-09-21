@@ -13,7 +13,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#6b2948", "#211c23"],
     sizes: ["XS", "S", "M", "L", "XL"],
     description: "A square neckline and an easy, close-to-body silhouette. A confident starting point for your evening edit.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: true,
   },
   {
@@ -27,7 +28,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#6c8ca7", "#263c54"],
     sizes: ["XS", "S", "M", "L", "XL"],
     description: "A wide-leg silhouette for your everyday rotation. Style it simply or make it the foundation of a layered look.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: true,
   },
   {
@@ -41,7 +43,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#d4c3ae", "#835565"],
     sizes: ["XS", "S", "M", "L", "XL"],
     description: "An easy coordinated look, with pieces you can wear together or make your own separately.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: true,
   },
   {
@@ -55,7 +58,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#602340", "#e3dcd1"],
     sizes: ["XS", "S", "M", "L", "XL"],
     description: "A rich plum tone and an easy shape. Dress it up with tailored trousers or keep things relaxed.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: false,
   },
   {
@@ -69,7 +73,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#2d1b28", "#c8a27a"],
     sizes: ["XS", "S", "M", "L", "XL"],
     description: "Fluid mulberry silk blend with an elongated back tie. Crafted for galas, dinners, and special occasions.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: true,
   },
   {
@@ -83,7 +88,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#1e2530", "#dfd8cd"],
     sizes: ["XS", "S", "M", "L", "XL"],
     description: "Sharp knife pleats that move effortlessly with every stride. High-waisted with a hidden side closure.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: false,
   },
   {
@@ -97,7 +103,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#b8a495", "#382933"],
     sizes: ["XS", "S", "M", "L", "XL"],
     description: "Ultra-soft ribbed knit with asymmetric crossover ties. Ideal for trans-seasonal layering.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: false,
   },
   {
@@ -111,7 +118,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#c5b59f", "#1c181b"],
     sizes: ["S", "M", "L", "XL"],
     description: "A timeless outerwear anchor. Water-resistant heavyweight gabardine with storm flaps and a belted waist.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: true,
   },
   {
@@ -125,7 +133,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#3d3b36", "#a69b8d"],
     sizes: ["XS", "S", "M", "L", "XL"],
     description: "Streetwear utility meets architectural elegance. Features deep bellows pockets and back split vent.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: false,
   },
   {
@@ -139,7 +148,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#40152f", "#141416"],
     sizes: ["XS", "S", "M", "L"],
     description: "Internal boning with structured cups in deep royal velvet. Pair with tailored trousers or flowing skirts.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: false,
   },
 
@@ -155,7 +165,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#d9d2c5", "#292428"],
     sizes: ["S", "M", "L", "XL", "XXL"],
     description: "A relaxed shape with dropped shoulders. Pair it with loose denim or your favourite everyday trousers.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: true,
   },
   {
@@ -169,7 +180,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#604c40", "#292428"],
     sizes: ["S", "M", "L", "XL"],
     description: "Clean lines and a relaxed fit bring an effortless finish to your outfit. Your next layer starts here.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: true,
   },
   {
@@ -183,7 +195,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#242125", "#87817e"],
     sizes: ["S", "M", "L", "XL", "XXL"],
     description: "A generous silhouette that belongs in your everyday wardrobe. Layer up with your favourite denim.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: true,
   },
   {
@@ -197,7 +210,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#6887a3", "#283845"],
     sizes: ["S", "M", "L", "XL", "XXL"],
     description: "Everyday denim with room to move. A straight, relaxed cut for the outfits you come back to.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: false,
   },
   {
@@ -211,7 +225,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#1c1c1f", "#5c554e"],
     sizes: ["S", "M", "L", "XL", "XXL"],
     description: "Modern single-breasted tailoring cut with relaxed shoulder pads. Transitions from boardroom to night out.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: true,
   },
   {
@@ -225,7 +240,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#e8e2d8", "#2a363b"],
     sizes: ["S", "M", "L", "XL", "XXL"],
     description: "Breathable textured cotton with open camp collar. Casual luxury designed for warm climates.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: false,
   },
   {
@@ -239,7 +255,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#3b362e", "#1b1a1c"],
     sizes: ["S", "M", "L", "XL", "XXL"],
     description: "Structured cotton twill with articulated knees and adjustable cinch hems.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: false,
   },
   {
@@ -253,7 +270,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#705446", "#231f20"],
     sizes: ["S", "M", "L", "XL"],
     description: "Plush brushed suede finish with gunmetal two-way zipper and ribbed knit cuffs.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: false,
   },
   {
@@ -267,7 +285,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#44627d", "#eae5dc"],
     sizes: ["S", "M", "L", "XL", "XXL"],
     description: "Garment-dyed heavyweight Oxford weave with dual chest patch pockets.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: false,
   },
   {
@@ -281,7 +300,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#141314", "#cfc9be"],
     sizes: ["S", "M", "L", "XL", "XXL"],
     description: "300GSM organic cotton jersey with subtle tonal BGV embroidery on the chest.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: false,
   },
 
@@ -297,7 +317,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#1c191a", "#784b38"],
     sizes: ["One Size"],
     description: "Full-grain supple leather tote bag with internal 16” laptop compartment and magnetic closure.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: true,
   },
   {
@@ -311,7 +332,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#40152f", "#d5c8ba"],
     sizes: ["One Size"],
     description: "Oversized, ultra-warm brushed wool scarf finished with classic fringed edges.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: false,
   },
   {
@@ -325,7 +347,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#1f1e21", "#4f584e"],
     sizes: ["One Size"],
     description: "Weather-resistant Cordura nylon with adjustable seatbelt webbing strap and matte black hardware.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: false,
   },
   {
@@ -339,7 +362,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     colors: ["#111111", "#593b2a"],
     sizes: ["One Size"],
     description: "Handcrafted Italian acetate frames with 100% UV400 protective polarized tinted lenses.",
-    inStock: true,
+    inStock: false,
+    stockQuantity: 0,
     featured: false,
   },
 ];

@@ -46,69 +46,50 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Invalid or expired verification code." }, { status: 400 });
     }
 
-    // Get or create user
     let user: any = null;
     if (db) {
       try {
         const found = await db.select().from(schema.users).where(eq(schema.users.email, normalizedEmail)).limit(1);
         if (found.length > 0) {
           user = found[0];
-        } else {
-          // Auto create user upon OTP verification
-          const newId = crypto.randomUUID();
-          await db.insert(schema.users).values({
-            id: newId as any,
-            name: name?.trim() || normalizedEmail.split("@")[0],
-            email: normalizedEmail,
-            passwordHash: "otp_authenticated",
-            role: "customer",
-          });
-          user = { id: newId, name: name?.trim() || normalizedEmail.split("@")[0], email: normalizedEmail, role: "customer" };
         }
       } catch (err) {
-        console.warn("DB user find/create notice:", err);
+        console.warn("DB user find notice:", err);
       }
     }
 
     if (!user) {
       user = inMemoryStore.users.get(normalizedEmail);
       if (!user) {
-        user = {
-          id: crypto.randomUUID(),
-          name: name?.trim() || normalizedEmail.split("@")[0],
-          email: normalizedEmail,
-          role: "customer",
-        };
-        inMemoryStore.users.set(normalizedEmail, { ...user, passwordHash: "otp_authenticated", createdAt: new Date() });
+        return NextResponse.json({
+          success: false,
+          error: "This user is not registered. Please create an account first.",
+        }, { status: 404 });
       }
     }
 
-    const userObj = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role || "customer",
-    };
+    const updatedStatus = "PENDING_ADMIN_APPROVAL";
+    if (db) {
+      try {
+        await db
+          .update(schema.users)
+          .set({ accountStatus: updatedStatus, emailVerifiedAt: new Date() })
+          .where(eq(schema.users.email, normalizedEmail));
+      } catch (err) {
+        console.warn("DB status update notice:", err);
+      }
+    }
+    if (user && inMemoryStore.users.has(normalizedEmail)) {
+      const existing = inMemoryStore.users.get(normalizedEmail)!;
+      existing.accountStatus = updatedStatus;
+      existing.name = existing.name || (name?.trim() || normalizedEmail.split("@")[0]);
+    }
 
-    const token = await createSessionToken(userObj);
-
-    const response = NextResponse.json({
+    return NextResponse.json({
       success: true,
-      message: "Verified and signed in successfully!",
-      data: { user: userObj },
+      message: "Email verified successfully. Your account is awaiting administrator approval.",
+      data: { status: updatedStatus },
     });
-
-    response.cookies.set({
-      name: COOKIE_NAME,
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 30 * 24 * 60 * 60,
-    });
-
-    return response;
   } catch (error: any) {
     return NextResponse.json({ success: false, error: "Verification failed." }, { status: 500 });
   }

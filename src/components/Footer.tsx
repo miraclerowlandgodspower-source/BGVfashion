@@ -1,5 +1,8 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   InstagramIcon,
   TikTokIcon,
@@ -11,7 +14,12 @@ import {
 } from "./Icons";
 
 export function Footer() {
+  const pathname = usePathname();
   const currentYear = new Date().getFullYear();
+
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <footer className="site-footer">
@@ -113,9 +121,6 @@ export function Footer() {
             <Link href="/privacy">Privacy & Cookie Policy</Link>
             <Link href="/terms">Terms of Service</Link>
             <Link href="/account">My Account</Link>
-            <Link href="/admin" style={{ color: "var(--coral)", fontWeight: 700 }}>
-              Admin Portal
-            </Link>
           </div>
         </div>
 

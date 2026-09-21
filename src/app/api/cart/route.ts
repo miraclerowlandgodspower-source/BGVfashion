@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const user = await getSessionUser();
     const db = getDb();
-    let items: any[] = [];
+    const items: any[] = [];
 
     if (user && db) {
       try {
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
         console.warn("DB error updating cart:", err);
       }
     } else if (user) {
-      let userCart = inMemoryStore.cart.get(user.id) || [];
+      const userCart = inMemoryStore.cart.get(user.id) || [];
       const existing = userCart.find((i) => i.productId === productId && i.size === size);
       if (existing) {
         existing.quantity = Math.min(10, existing.quantity + quantity);

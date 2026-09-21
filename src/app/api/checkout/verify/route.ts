@@ -22,13 +22,37 @@ export async function GET(req: Request) {
     const db = getDb();
     if (db && isSuccessful) {
       try {
+        const orderRows = await db
+          .select()
+          .from(schema.orders)
+          .where(eq(schema.orders.paystackReference, reference))
+          .limit(1);
+
         await db
           .update(schema.orders)
           .set({
-            status: "paid",
+            status: "payment_confirmed",
+            paymentStatus: "paid",
             paidAt: new Date(),
           })
           .where(eq(schema.orders.paystackReference, reference));
+
+        if (orderRows.length > 0) {
+          const ord = orderRows[0];
+          await db
+            .insert(schema.payments)
+            .values({
+              orderId: ord.id,
+              reference,
+              provider: "Paystack",
+              amount: paystackVerification.data.amount ? Math.round(paystackVerification.data.amount / 100) : ord.totalAmount,
+              currency: paystackVerification.data.currency || "NGN",
+              status: "success",
+              paidAt: new Date(paystackVerification.data.paid_at || Date.now()),
+              rawResponse: paystackVerification.data as any,
+            })
+            .onConflictDoNothing();
+        }
       } catch (err) {
         console.warn("DB order status update notice:", err);
       }
@@ -37,7 +61,8 @@ export async function GET(req: Request) {
     // Update in-memory order
     const memOrder = inMemoryStore.orders.get(reference);
     if (memOrder) {
-      memOrder.status = isSuccessful ? "paid" : "failed";
+      memOrder.status = isSuccessful ? "payment_confirmed" : "pending";
+      memOrder.paymentStatus = isSuccessful ? "paid" : "failed";
       memOrder.paidAt = isSuccessful ? new Date().toISOString() : null;
     }
 

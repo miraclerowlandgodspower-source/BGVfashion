@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { useStore } from "@/context/StoreContext";
 import { ChatIcon, CloseIcon } from "./Icons";
 
@@ -13,6 +14,7 @@ interface ChatMessage {
 }
 
 export function LiveChat() {
+  const pathname = usePathname();
   const { user } = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -31,26 +33,6 @@ export function LiveChat() {
     }
   }, [user]);
 
-  // Load conversation ID from local storage
-  useEffect(() => {
-    const savedConvId = localStorage.getItem("bgv_chat_conv_id");
-    if (savedConvId) {
-      setConversationId(savedConvId);
-      fetchConversation(savedConvId);
-    } else {
-      // Add initial greeting
-      setMessages([
-        {
-          id: "welcome-1",
-          senderName: "BGV Concierge",
-          senderRole: "admin",
-          message: "Welcome to BGV Fashion. How may our concierge team assist with your styling or orders today?",
-          createdAt: new Date().toISOString(),
-        },
-      ]);
-    }
-  }, []);
-
   const fetchConversation = async (convId: string) => {
     try {
       const res = await fetch(`/api/chat?conversationId=${convId}`);
@@ -62,6 +44,25 @@ export function LiveChat() {
       console.warn("Could not fetch chat messages:", err);
     }
   };
+
+  // Load conversation ID from local storage
+  useEffect(() => {
+    const savedConvId = localStorage.getItem("bgv_chat_conv_id");
+    if (savedConvId) {
+      setConversationId(savedConvId);
+      fetchConversation(savedConvId);
+    } else {
+      setMessages([
+        {
+          id: "welcome-1",
+          senderName: "BGV Concierge",
+          senderRole: "admin",
+          message: "Welcome to BGV Fashion. How may our concierge team assist with your styling or orders today?",
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+    }
+  }, []);
 
   // Auto poll for replies when chat is open
   useEffect(() => {
@@ -126,6 +127,10 @@ export function LiveChat() {
       setSending(false);
     }
   };
+
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 9998 }}>

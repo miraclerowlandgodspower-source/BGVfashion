@@ -2,15 +2,13 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useStore } from "@/context/StoreContext";
 import { formatMoney } from "@/lib/money";
 import { COUNTRIES_193, NIGERIAN_STATES_AND_CITIES } from "@/lib/locations";
 import { calculateShippingFee } from "@/lib/shipping";
-import { PaymentBadges, TruckIcon, ShieldIcon } from "@/components/Icons";
+import { PaystackIcon, TruckIcon } from "@/components/Icons";
 
 export default function CheckoutPage() {
-  const router = useRouter();
   const { cart, cartSubtotal, user, country, currency, showToast } = useStore();
 
   const [formData, setFormData] = useState({
@@ -24,10 +22,12 @@ export default function CheckoutPage() {
     postalCode: "",
   });
 
+  const [discountCode, setDiscountCode] = useState("");
+  const [discountApplied, setDiscountApplied] = useState(false);
+  const [discountAmount, setDiscountAmount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Update form country if global currency/country changes
   useEffect(() => {
     if (country) {
       setFormData((prev) => ({
@@ -39,7 +39,6 @@ export default function CheckoutPage() {
     }
   }, [country]);
 
-  // Dynamic live calculation of distance-based shipping fee from Ojo, Lagos
   const shippingCalculation = useMemo(() => {
     return calculateShippingFee({
       country: formData.country,
@@ -50,7 +49,10 @@ export default function CheckoutPage() {
   }, [formData.country, formData.state, formData.city, cartSubtotal]);
 
   const shippingFee = shippingCalculation.fee;
-  const grandTotal = cartSubtotal + shippingFee;
+  const duties = 0;
+  const taxes = Math.round(cartSubtotal * 0.05); // 5% VAT tax
+  const subtotalAfterDiscount = Math.max(0, cartSubtotal - discountAmount);
+  const grandTotal = subtotalAfterDiscount + shippingFee + duties + taxes;
 
   if (cart.length === 0) {
     return (
@@ -68,10 +70,8 @@ export default function CheckoutPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-      // If state changed in Nigeria, reset city to first city of that state
       if (name === "state" && prev.country === "Nigeria" && NIGERIAN_STATES_AND_CITIES[value]) {
         updated.city = NIGERIAN_STATES_AND_CITIES[value][0] || "";
       }
@@ -79,17 +79,31 @@ export default function CheckoutPage() {
     });
   };
 
+  const handleApplyDiscount = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!discountCode.trim()) return;
+
+    if (discountCode.trim().toUpperCase() === "BGV10" || discountCode.trim().toUpperCase() === "WELCOME10") {
+      const discount = Math.round(cartSubtotal * 0.1);
+      setDiscountAmount(discount);
+      setDiscountApplied(true);
+      showToast("10% discount applied to your order!");
+    } else {
+      showToast("Invalid discount code.");
+    }
+  };
+
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     if (!formData.fullName || !formData.email || !formData.addressLine || !formData.phone) {
-      setError("Please fill in all required contact and street address fields.");
+      setError("Please fill in all required contact and address fields.");
       return;
     }
 
     if (!formData.city || (formData.country === "Nigeria" && !formData.state)) {
-      setError("Please select your destination State and City for delivery calculation.");
+      setError("Please select your State and City for delivery calculation.");
       return;
     }
 
@@ -104,17 +118,20 @@ export default function CheckoutPage() {
           shippingAddress: formData,
           currency,
           shippingCalculation,
+          discountAmount,
+          taxes,
+          grandTotal,
         }),
       });
 
       const json = await res.json();
 
       if (!json.success || !json.data?.authorizationUrl) {
-        throw new Error(json.error || "Could not initialize secure payment gateway session.");
+        throw new Error(json.error || "Could not initialize Paystack payment session.");
       }
 
-      showToast("Redirecting to Paystack secure payment...");
-      window.location.href = json.data.authorizationUrl;
+      showToast("Redirecting to Paystack payment gateway...");
+      window.location.assign(json.data.authorizationUrl);
     } catch (err: any) {
       console.error("Checkout error:", err);
       setError(err.message || "An error occurred during checkout. Please try again.");
@@ -132,20 +149,14 @@ export default function CheckoutPage() {
       <div className="breadcrumb">
         <Link href="/cart">Shopping Bag</Link>
         <span>/</span>
-        <span>Secure Checkout</span>
+        <span>Checkout</span>
       </div>
 
-      <header className="page-head">
-        <p className="eyebrow">DESTINATION FULFILLMENT FROM OJO, LAGOS</p>
-        <h1 className="page-title">Secure Checkout</h1>
-        <p className="page-intro">
-          Worldwide shipping across 193 countries and all Nigerian states. Guaranteed fast delivery.
-        </p>
-      </header>
-
-      <form onSubmit={handlePay} className="checkout-layout">
+      <form onSubmit={handlePay} className="checkout-layout" style={{ marginTop: "24px" }}>
         <section>
-          <h2>1. Contact & Delivery Destination</h2>
+          <h2 style={{ fontSize: "1.4rem", fontWeight: 900, marginBottom: "20px" }}>
+            1. Delivery Address
+          </h2>
 
           {error && (
             <div
@@ -154,8 +165,9 @@ export default function CheckoutPage() {
                 border: "1px solid #f7c5cc",
                 color: "#a31835",
                 padding: "14px 18px",
-                margin: "18px 0",
+                marginBottom: "20px",
                 fontSize: "0.875rem",
+                borderRadius: "8px",
               }}
               role="alert"
             >
@@ -165,19 +177,19 @@ export default function CheckoutPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             <label className="field">
-              <span>Full Name *</span>
+              <span style={{ fontWeight: 800 }}>First & Last Name *</span>
               <input
                 type="text"
                 name="fullName"
                 required
                 value={formData.fullName}
                 onChange={handleChange}
-                placeholder="e.g. Amara Okafor"
+                placeholder="First name, Last name"
               />
             </label>
 
             <label className="field">
-              <span>Email Address *</span>
+              <span style={{ fontWeight: 800 }}>Email Address *</span>
               <input
                 type="email"
                 name="email"
@@ -190,7 +202,7 @@ export default function CheckoutPage() {
           </div>
 
           <label className="field">
-            <span>Phone Number (for Courier updates) *</span>
+            <span style={{ fontWeight: 800 }}>Phone Number *</span>
             <input
               type="tel"
               name="phone"
@@ -201,10 +213,9 @@ export default function CheckoutPage() {
             />
           </label>
 
-          {/* 193 Countries Dropdown */}
           <label className="field">
-            <span>Country (193 Countries Supported) *</span>
-            <select name="country" value={formData.country} onChange={handleChange}>
+            <span style={{ fontWeight: 800 }}>Country / Region *</span>
+            <select name="country" value={formData.country} onChange={handleChange} style={{ fontWeight: 700 }}>
               {COUNTRIES_193.map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -213,12 +224,11 @@ export default function CheckoutPage() {
             </select>
           </label>
 
-          {/* Cascading State & City Dropdowns */}
           {isNigeria ? (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
               <label className="field">
-                <span>State (All 36 States + FCT) *</span>
-                <select name="state" value={formData.state} onChange={handleChange}>
+                <span style={{ fontWeight: 800 }}>State *</span>
+                <select name="state" value={formData.state} onChange={handleChange} style={{ fontWeight: 700 }}>
                   {Object.keys(NIGERIAN_STATES_AND_CITIES).map((st) => (
                     <option key={st} value={st}>
                       {st}
@@ -228,8 +238,8 @@ export default function CheckoutPage() {
               </label>
 
               <label className="field">
-                <span>City / Area / LGA *</span>
-                <select name="city" value={formData.city} onChange={handleChange}>
+                <span style={{ fontWeight: 800 }}>City / LGA *</span>
+                <select name="city" value={formData.city} onChange={handleChange} style={{ fontWeight: 700 }}>
                   {availableCities.map((ct) => (
                     <option key={ct} value={ct}>
                       {ct}
@@ -241,173 +251,258 @@ export default function CheckoutPage() {
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
               <label className="field">
-                <span>State / Province / Region</span>
+                <span style={{ fontWeight: 800 }}>State / Region</span>
                 <input
                   type="text"
                   name="state"
                   value={formData.state}
                   onChange={handleChange}
-                  placeholder="e.g. Greater London / California"
+                  placeholder="State / Region"
                 />
               </label>
 
               <label className="field">
-                <span>City / Town *</span>
+                <span style={{ fontWeight: 800 }}>City *</span>
                 <input
                   type="text"
                   name="city"
                   required
                   value={formData.city}
                   onChange={handleChange}
-                  placeholder="e.g. London / New York"
+                  placeholder="City"
                 />
               </label>
             </div>
           )}
 
           <label className="field">
-            <span>Street Address & Flat / Suite *</span>
+            <span style={{ fontWeight: 800 }}>Address Line *</span>
             <input
               type="text"
               name="addressLine"
               required
               value={formData.addressLine}
               onChange={handleChange}
-              placeholder="e.g. 12 Badagry Expressway, Flat 3B"
+              placeholder="Street address, house number"
             />
           </label>
 
-          {/* Live Delivery Calculation Notification */}
-          <div
-            style={{
-              background: "var(--soft)",
-              border: "1px solid var(--line)",
-              padding: "16px 20px",
-              marginTop: "20px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 700, fontSize: "0.9rem" }}>
-              <TruckIcon size={20} />
-              <span>Fulfilled from: Ojo Atelier Hub, Lagos</span>
-            </div>
-            <div style={{ fontSize: "0.85rem", color: "var(--muted)", marginTop: "6px" }}>
-              Destination Zone: <strong>{shippingCalculation.zone}</strong> · Est. Timeline:{" "}
-              <strong>{shippingCalculation.estimatedDays}</strong>
-            </div>
-            <div style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "4px" }}>
-              Carriers: {shippingCalculation.couriers.join(" · ")}
-            </div>
-          </div>
+          {/* Paystack Exclusive Payment Method Section */}
+          <div style={{ marginTop: "36px" }}>
+            <h2 style={{ fontSize: "1.4rem", fontWeight: 900, marginBottom: "16px" }}>
+              2. Payment Method
+            </h2>
 
-          {/* Payment method section */}
-          <div style={{ marginTop: "32px" }}>
-            <h2>2. Supported Payment Methods</h2>
             <div
               style={{
-                border: "1px solid var(--plum)",
+                border: "2px solid #000",
+                borderRadius: "12px",
                 padding: "20px",
-                marginTop: "16px",
-                backgroundColor: "var(--soft)",
+                background: "#FAF8F9",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                <PaystackIcon width={48} height={30} />
                 <div>
-                  <strong style={{ fontSize: "1rem" }}>Instant & Secure Checkout</strong>
-                  <p style={{ fontSize: "0.85rem", color: "var(--muted)", marginTop: "2px" }}>
-                    Pay seamlessly with your preferred card or digital wallet.
-                  </p>
+                  <div style={{ fontWeight: 900, fontSize: "1rem", color: "#000" }}>
+                    Paystack Payment Gateway
+                  </div>
+                  <div style={{ fontSize: "0.82rem", color: "#64748B", marginTop: "2px" }}>
+                    Debit / Credit Card, Bank Transfer, USSD, Apple Pay
+                  </div>
                 </div>
-                <span
-                  style={{
-                    background: "var(--plum)",
-                    color: "#fff",
-                    fontSize: "0.75rem",
-                    padding: "4px 8px",
-                    fontWeight: 700,
-                  }}
-                >
-                  ENCRYPTED
-                </span>
               </div>
 
-              <PaymentBadges />
+              <div
+                style={{
+                  width: "22px",
+                  height: "22px",
+                  borderRadius: "50%",
+                  background: "#000",
+                  color: "#FFF",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "0.8rem",
+                  fontWeight: 900,
+                }}
+              >
+                ✓
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Order Summary */}
-        <aside className="order-summary" aria-label="Checkout Summary">
-          <h2>Order Summary</h2>
-
-          <div style={{ marginBottom: "20px", maxHeight: "260px", overflowY: "auto" }}>
+        {/* Order Summary matching Image 1 */}
+        <aside
+          style={{
+            background: "#FFF",
+            border: "1px solid #E2E8F0",
+            borderRadius: "16px",
+            padding: "28px",
+          }}
+          aria-label="Order summary"
+        >
+          {/* Cart Products List */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "24px" }}>
             {cart.map((item, idx) => {
               if (!item.product) return null;
               return (
-                <div
-                  key={idx}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: "0.85rem",
-                    paddingBottom: "10px",
-                    marginBottom: "10px",
-                    borderBottom: "1px solid var(--line)",
-                  }}
-                >
-                  <div>
-                    <strong>{item.product.name}</strong>
-                    <div style={{ color: "var(--muted)" }}>
-                      Size {item.size} × {item.quantity}
+                <div key={idx} style={{ display: "flex", gap: "14px", alignItems: "center" }}>
+                  <div style={{ position: "relative", width: "64px", height: "64px", flexShrink: 0 }}>
+                    <div className={`photo q${item.product.quadrant}`} style={{ width: "64px", height: "64px", borderRadius: "8px" }}>
+                      <img
+                        src={`/images/${item.product.sheet}`}
+                        alt={item.product.name}
+                        width={1024}
+                        height={1536}
+                      />
+                    </div>
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: "-6px",
+                        right: "-6px",
+                        background: "#000",
+                        color: "#FFF",
+                        borderRadius: "50%",
+                        fontSize: "0.75rem",
+                        fontWeight: 900,
+                        width: "20px",
+                        height: "20px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {item.quantity}
+                    </span>
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 800, fontSize: "0.9rem", color: "#000" }}>
+                      {item.product.name}
+                    </div>
+                    <div style={{ fontSize: "0.8rem", color: "#64748B" }}>
+                      Size: {item.size}
                     </div>
                   </div>
-                  <span>{formatMoney(item.product.price * item.quantity, currency)}</span>
+
+                  <div style={{ fontWeight: 800, fontSize: "0.95rem", color: "#000" }}>
+                    {formatMoney(item.product.price * item.quantity, currency)}
+                  </div>
                 </div>
               );
             })}
           </div>
 
-          <div className="summary-line">
-            <span>Items Subtotal</span>
-            <span>{formatMoney(cartSubtotal, currency)}</span>
-          </div>
+          {/* Discount Code Box (Image 1) */}
+          <form onSubmit={handleApplyDiscount} style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
+            <input
+              type="text"
+              placeholder="Discount code or gift card"
+              value={discountCode}
+              onChange={(e) => setDiscountCode(e.target.value)}
+              style={{
+                flex: 1,
+                padding: "12px 16px",
+                borderRadius: "10px",
+                border: "1px solid #CBD5E1",
+                fontSize: "0.9rem",
+                outline: "none",
+                minHeight: "44px",
+              }}
+            />
+            <button
+              type="submit"
+              style={{
+                padding: "0 18px",
+                background: "#F1F5F9",
+                border: "1px solid #CBD5E1",
+                borderRadius: "10px",
+                fontWeight: 800,
+                fontSize: "0.88rem",
+                cursor: "pointer",
+                color: "#334155",
+                minHeight: "44px",
+              }}
+            >
+              Apply
+            </button>
+          </form>
 
-          <div className="summary-line">
-            <span>
-              Delivery Fee ({shippingCalculation.zone.split(" ")[0]})
-            </span>
-            <span>
-              {shippingCalculation.isFreeShipping ? (
-                <span style={{ color: "var(--success)", fontWeight: 700 }}>FREE</span>
-              ) : (
-                formatMoney(shippingFee, currency)
-              )}
-            </span>
-          </div>
+          {/* Subtotal, Shipping, Duties, Taxes, Total Breakdown matching Image 1 */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid #E2E8F0", paddingTop: "20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem" }}>
+              <span style={{ color: "#475569" }}>Subtotal</span>
+              <span style={{ fontWeight: 800 }}>{formatMoney(cartSubtotal, currency)}</span>
+            </div>
 
-          <div className="summary-line summary-total">
-            <span>Total to Pay</span>
-            <span>{formatMoney(grandTotal, currency)}</span>
+            {discountApplied && (
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem", color: "#16a34a" }}>
+                <span>Discount (10% OFF)</span>
+                <span style={{ fontWeight: 800 }}>-{formatMoney(discountAmount, currency)}</span>
+              </div>
+            )}
+
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem" }}>
+              <span style={{ color: "#475569" }}>Shipping</span>
+              <span style={{ fontWeight: 800 }}>
+                {shippingFee === 0 ? "FREE" : formatMoney(shippingFee, currency)}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem" }}>
+              <span style={{ color: "#475569" }}>Duties</span>
+              <span style={{ fontWeight: 800 }}>{formatMoney(duties, currency)}</span>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem" }}>
+              <span style={{ color: "#475569" }}>Taxes</span>
+              <span style={{ fontWeight: 800 }}>{formatMoney(taxes, currency)}</span>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderTop: "2px solid #000",
+                paddingTop: "16px",
+                marginTop: "10px",
+              }}
+            >
+              <span style={{ fontSize: "1.1rem", fontWeight: 900, color: "#000" }}>Total</span>
+              <div style={{ textAlign: "right" }}>
+                <span style={{ fontSize: "0.75rem", color: "#64748B", fontWeight: 700, marginRight: "4px" }}>
+                  {currency}
+                </span>
+                <span style={{ fontSize: "1.4rem", fontWeight: 900, color: "#000" }}>
+                  {formatMoney(grandTotal, currency)}
+                </span>
+              </div>
+            </div>
           </div>
 
           <button
             type="submit"
-            className="button coral full-width"
+            className="button full-width"
             disabled={loading}
-            style={{ marginTop: "24px" }}
-          >
-            {loading ? "Connecting to Paystack..." : `Pay ${formatMoney(grandTotal, currency)}`}
-          </button>
-
-          <p
             style={{
-              fontSize: "0.75rem",
-              color: "var(--muted)",
-              textAlign: "center",
-              marginTop: "14px",
+              marginTop: "24px",
+              background: "#000",
+              color: "#FFF",
+              fontWeight: 900,
+              fontSize: "1.05rem",
+              padding: "16px",
+              borderRadius: "10px",
             }}
           >
-            🔒 Protected by 256-Bit SSL & PCI-DSS Tier 1 Security
-          </p>
+            {loading ? "Processing..." : `Complete Order with Paystack`}
+          </button>
         </aside>
       </form>
     </div>

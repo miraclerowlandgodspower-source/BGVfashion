@@ -22,13 +22,39 @@ export async function POST(req: Request) {
 
       if (db) {
         try {
+          const orderRows = await db
+            .select()
+            .from(schema.orders)
+            .where(eq(schema.orders.paystackReference, reference))
+            .limit(1);
+
           await db
             .update(schema.orders)
             .set({
-              status: "paid",
+              status: "payment_confirmed",
+              paymentStatus: "paid",
               paidAt: new Date(event.data.paid_at || Date.now()),
             })
             .where(eq(schema.orders.paystackReference, reference));
+
+          if (orderRows.length > 0) {
+            const ord = orderRows[0];
+            await db
+              .insert(schema.payments)
+              .values({
+                orderId: ord.id,
+                reference,
+                provider: "Paystack",
+                amount: event.data.amount ? Math.round(event.data.amount / 100) : ord.totalAmount,
+                currency: event.data.currency || "NGN",
+                status: "success",
+                channel: event.data.channel || "card",
+                cardType: event.data.authorization?.card_type || null,
+                paidAt: new Date(event.data.paid_at || Date.now()),
+                rawResponse: event.data as any,
+              })
+              .onConflictDoNothing();
+          }
         } catch (dbErr) {
           console.warn("Webhook DB update error:", dbErr);
         }
@@ -36,7 +62,8 @@ export async function POST(req: Request) {
 
       const memOrder = inMemoryStore.orders.get(reference);
       if (memOrder) {
-        memOrder.status = "paid";
+        memOrder.status = "payment_confirmed";
+        memOrder.paymentStatus = "paid";
         memOrder.paidAt = event.data.paid_at || new Date().toISOString();
       }
     }
