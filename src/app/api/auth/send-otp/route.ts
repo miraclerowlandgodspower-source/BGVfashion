@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
 import { getDb, inMemoryStore } from "@/lib/db";
 import * as schema from "@/db/schema";
+import { isValidEmail, normalizeEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
     const { email } = await req.json();
 
-    if (!email || !email.includes("@")) {
-      return NextResponse.json({ success: false, error: "A valid email address is required." }, { status: 400 });
+    if (typeof email !== "string") {
+      return NextResponse.json({ success: false, error: "Enter a valid email address" }, { status: 400 });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = normalizeEmail(email);
+    if (!isValidEmail(normalizedEmail)) {
+      return NextResponse.json({ success: false, error: "Enter a valid email address" }, { status: 400 });
+    }
     const now = Date.now();
     const resendWindowMs = 60 * 1000;
     const previous = inMemoryStore.otps.get(normalizedEmail);
@@ -24,6 +28,38 @@ export async function POST(req: Request) {
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = now + 10 * 60 * 1000;
+
+    const emailApiKey = process.env.EMAIL_API_KEY;
+    const emailFrom = process.env.EMAIL_FROM || "admin@bgvfashion.shop";
+    if (emailApiKey && emailFrom) {
+      const emailResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${emailApiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: process.env.EMAIL_FROM || "admin@bgvfashion.shop",
+          to: [normalizedEmail],
+          subject: "Your BGV Fashion verification code",
+          text: `Your BGV Fashion verification code is ${code}. It expires in 10 minutes.`,
+          html: `<p>Your BGV Fashion verification code is:</p><p style="font-size:28px;font-weight:bold;letter-spacing:6px">${code}</p><p>This code expires in 10 minutes.</p>`,
+        }),
+      });
+      if (!emailResponse.ok) {
+        const providerError = await emailResponse.json().catch(() => null) as { name?: string; message?: string } | null;
+        const senderNotVerified = providerError?.name === "validation_error" || /domain|sender|from/i.test(providerError?.message || "");
+        console.error("OTP email delivery failed:", {
+          status: emailResponse.status,
+          providerError: providerError?.name || "unknown",
+        });
+        return NextResponse.json({
+          success: false,
+          error: senderNotVerified
+            ? `Email delivery is not configured for ${emailFrom}. Verify the sender domain in Resend, then try again.`
+            : "We could not deliver your verification email. Please try again shortly.",
+        }, { status: 502 });
+      }
+    } else if (process.env.NODE_ENV === "production") {
+      return NextResponse.json({ success: false, error: "Email verification is not configured. Please contact support." }, { status: 503 });
+    }
 
     const db = getDb();
     if (db) {
@@ -44,24 +80,6 @@ export async function POST(req: Request) {
       expiresAt,
       verified: false,
     });
-
-    const emailApiKey = process.env.EMAIL_API_KEY;
-    if (emailApiKey) {
-      const emailResponse = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${emailApiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          from: process.env.EMAIL_FROM || "admin@bgvfashion.shop",
-          to: [normalizedEmail],
-          subject: "Your BGV Fashion verification code",
-          text: `Your BGV Fashion verification code is ${code}. It expires in 10 minutes.`,
-          html: `<p>Your BGV Fashion verification code is:</p><p style="font-size:28px;font-weight:bold;letter-spacing:6px">${code}</p><p>This code expires in 10 minutes.</p>`,
-        }),
-      });
-      if (!emailResponse.ok) return NextResponse.json({ success: false, error: "We could not deliver your verification email. Please try again." }, { status: 502 });
-    } else if (process.env.NODE_ENV === "production") {
-      return NextResponse.json({ success: false, error: "Email verification is not configured. Please contact support." }, { status: 503 });
-    }
 
     console.log(`[BGV AUTH OTP] Verification code for ${normalizedEmail}: ${code} (valid for 10 mins)`);
 

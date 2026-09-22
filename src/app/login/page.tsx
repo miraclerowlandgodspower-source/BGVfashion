@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/context/StoreContext";
+import { isValidEmail, normalizeEmail } from "@/lib/email";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -53,13 +54,19 @@ export default function LoginPage() {
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    const normalizedEmail = normalizeEmail(email);
+    if (!isValidEmail(normalizedEmail)) {
+      setError("Enter a valid email address");
+      return;
+    }
+    setEmail(normalizedEmail);
     setLoading(true);
 
     try {
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: normalizedEmail }),
       });
 
       const json = await res.json();
@@ -80,13 +87,19 @@ export default function LoginPage() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    const normalizedEmail = normalizeEmail(email);
+    if (!isValidEmail(normalizedEmail)) {
+      setError("Enter a valid email address");
+      return;
+    }
+    setEmail(normalizedEmail);
     setLoading(true);
 
     try {
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code: otpCode, purpose: "login" }),
+        body: JSON.stringify({ email: normalizedEmail, code: otpCode, purpose: "login" }),
       });
 
       const json = await res.json();
@@ -196,7 +209,7 @@ export default function LoginPage() {
             </button>
           </form>
         ) : !otpSent ? (
-          <form onSubmit={handleSendOtp}>
+          <form onSubmit={handleSendOtp} noValidate>
             <label className="field">
               <span>Email Address</span>
               <input

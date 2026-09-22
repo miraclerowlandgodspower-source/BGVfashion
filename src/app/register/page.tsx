@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/context/StoreContext";
+import { isValidEmail, normalizeEmail } from "@/lib/email";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -22,6 +23,13 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
+    const normalizedEmail = normalizeEmail(email);
+    if (!isValidEmail(normalizedEmail)) {
+      setError("Enter a valid email address");
+      return;
+    }
+    setEmail(normalizedEmail);
+
     if (password.length < 6) {
       setError("Password must be at least 6 characters long.");
       return;
@@ -33,7 +41,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email: normalizedEmail, password }),
       });
 
       const json = await res.json();
@@ -44,7 +52,7 @@ export default function RegisterPage() {
       const otpRes = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: normalizedEmail }),
       });
       const otpJson = await otpRes.json();
       if (!otpRes.ok || !otpJson.success) {
@@ -95,13 +103,19 @@ export default function RegisterPage() {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    const normalizedEmail = normalizeEmail(email);
+    if (!isValidEmail(normalizedEmail)) {
+      setError("Enter a valid email address");
+      return;
+    }
+    setEmail(normalizedEmail);
     setLoading(true);
 
     try {
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code: otpCode, name }),
+        body: JSON.stringify({ email: normalizedEmail, code: otpCode, name }),
       });
 
       const json = await res.json();
@@ -164,7 +178,7 @@ export default function RegisterPage() {
         )}
 
         {!otpSent ? (
-          <form onSubmit={handlePasswordSubmit}>
+          <form onSubmit={handlePasswordSubmit} noValidate>
             <label className="field">
               <span>Full Name</span>
               <input
