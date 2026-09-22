@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description:
     "Explore luxury contemporary women's and men's fashion. Handcrafted pieces dispatched from Ojo, Lagos to 193 countries worldwide.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/icon.png",
   },
 };
 
