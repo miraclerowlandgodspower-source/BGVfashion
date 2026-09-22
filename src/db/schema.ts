@@ -211,6 +211,7 @@ export const emailOtps = pgTable("email_otps", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").notNull(),
   code: text("code").notNull(),
+  attempts: integer("attempts").default(0).notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   verified: boolean("verified").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -221,3 +222,33 @@ export const storeSettings = pgTable("store_settings", {
   value: text("value").notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const visitorAnalytics = pgTable("visitor_analytics", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sessionId: text("session_id").notNull(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  entryPage: text("entry_page"),
+  currentPage: text("current_page"),
+  referrer: text("referrer"),
+  deviceType: text("device_type"),
+  browser: text("browser"),
+  os: text("os"),
+  country: text("country"),
+  lastActivityAt: timestamp("last_activity_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("visitor_analytics_session_idx").on(table.sessionId),
+  index("visitor_analytics_last_activity_idx").on(table.lastActivityAt),
+]);
+
+export const adminAuditLogs = pgTable("admin_audit_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  adminId: uuid("admin_id").references(() => users.id, { onDelete: "set null" }),
+  action: text("action").notNull(), // e.g., 'product_created', 'user_approved'
+  target: text("target"), // e.g., 'product:123', 'user:456'
+  details: text("details"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("admin_audit_logs_admin_idx").on(table.adminId),
+  index("admin_audit_logs_action_idx").on(table.action),
+]);

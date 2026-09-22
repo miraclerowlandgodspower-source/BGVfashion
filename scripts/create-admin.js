@@ -87,14 +87,14 @@ async function createAdmin() {
       if (checkRes.rows.length > 0) {
         // Update user to admin and update password hash
         await client.query(
-          "UPDATE users SET name = $1, password_hash = $2, role = 'admin' WHERE email = $3",
+          "UPDATE users SET name = $1, password_hash = $2, role = 'admin', account_status = 'ACTIVE' WHERE email = $3",
           [name, passwordHash, email]
         );
         console.log(` SUCCESS: Existing user [${email}] has been upgraded to Administrator with new password!`);
       } else {
         // Insert new admin
         await client.query(
-          "INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, 'admin')",
+          "INSERT INTO users (name, email, password_hash, role, account_status) VALUES ($1, $2, $3, 'admin', 'ACTIVE')",
           [name, email, passwordHash]
         );
         console.log(` SUCCESS: New Administrator account created for [${email}]!`);

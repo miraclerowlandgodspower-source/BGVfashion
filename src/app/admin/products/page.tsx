@@ -99,6 +99,34 @@ export default function AdminProductsPage() {
     setModalMode("edit");
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    setSaving(true);
+    setNotice("Uploading image...");
+
+    try {
+      const res = await fetch(`/api/admin/upload?filename=${encodeURIComponent(file.name)}`, {
+        method: "POST",
+        body: file,
+      });
+      const json = await res.json();
+      if (json.success) {
+        setFormData({ ...formData, image: json.url });
+        setNotice("Image uploaded successfully!");
+      } else {
+        alert(json.error || "Upload failed");
+        setNotice("");
+      }
+    } catch (err) {
+      alert("Image upload error");
+      setNotice("");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -697,17 +725,52 @@ export default function AdminProductsPage() {
 
               <div style={{ marginBottom: "16px" }}>
                 <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 700, marginBottom: "6px" }}>
-                  Product Image Direct URL (CDN or Hosted Image Link)
+                  Product Image (Upload or URL)
                 </label>
-                <input
-                  type="url"
-                  placeholder="https://images.unsplash.com/... or https://your-cdn.com/dress.jpg"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  style={{ width: "100%", padding: "10px 12px", border: "1px solid #d1d5db", borderRadius: "6px" }}
-                />
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <input
+                    type="url"
+                    placeholder="https://... or upload file ->"
+                    value={formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    style={{ flex: 1, padding: "10px 12px", border: "1px solid #d1d5db", borderRadius: "6px" }}
+                  />
+                  <label
+                    style={{
+                      background: "#f3f4f6",
+                      border: "1px solid #d1d5db",
+                      color: "#374151",
+                      padding: "10px 16px",
+                      borderRadius: "6px",
+                      fontSize: "0.85rem",
+                      fontWeight: 700,
+                      cursor: saving ? "not-allowed" : "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    Upload File
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={saving}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                </div>
+                {formData.image && (
+                  <div style={{ marginTop: "10px" }}>
+                    <img
+                      src={formData.image}
+                      alt="Preview"
+                      style={{ height: "60px", width: "auto", borderRadius: "4px", border: "1px solid #e5e7eb" }}
+                    />
+                  </div>
+                )}
                 <span style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "3px", display: "block" }}>
-                  If empty, the piece uses the atelier fallback styling sheet.
+                  Upload an image directly (saved to Vercel Blob) or paste a CDN URL.
                 </span>
               </div>
 

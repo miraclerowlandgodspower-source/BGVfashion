@@ -24,8 +24,12 @@ export default function AdminLayout({
     { label: "Products", href: "/admin/products", icon: "👗" },
     { label: "Orders", href: "/admin/orders", icon: "📦" },
     { label: "Customers", href: "/admin/customers", icon: "👥" },
+    { label: "User Approvals", href: "/admin/approvals", icon: "✅" },
+    { label: "Visitors", href: "/admin/visitors", icon: "👁️" },
     { label: "Messages", href: "/admin/messages", icon: "💬" },
     { label: "Shipping", href: "/admin/shipping", icon: "🚚" },
+    { label: "Payments", href: "/admin/payments", icon: "💳" },
+    { label: "Analytics", href: "/admin/analytics", icon: "📈" },
     { label: "Settings", href: "/admin/settings", icon: "⚙️" },
   ];
 

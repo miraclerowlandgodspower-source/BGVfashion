@@ -39,68 +39,6 @@ export function Header() {
 
   return (
     <header>
-      {/* Top Banner with Social links & Free Shipping Announcement */}
-      <div
-        className="announcement"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          padding: "7px 24px",
-        }}
-      >
-        <div style={{ display: "flex", gap: "14px", alignItems: "center" }}>
-          <a
-            href="https://instagram.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Instagram"
-            style={{ color: "#fff", display: "inline-flex" }}
-          >
-            <InstagramIcon size={14} />
-          </a>
-          <a
-            href="https://tiktok.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="TikTok"
-            style={{ color: "#fff", display: "inline-flex" }}
-          >
-            <TikTokIcon size={14} />
-          </a>
-          <a
-            href="https://youtube.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="YouTube"
-            style={{ color: "#fff", display: "inline-flex" }}
-          >
-            <YouTubeIcon size={14} />
-          </a>
-        </div>
-
-        <div style={{ fontWeight: 700, letterSpacing: "0.14em" }}>
-          DISCOVER THE NEW BGV COLLECTION · DISPATCHED FROM OJO, LAGOS · WORLDWIDE DELIVERY
-        </div>
-
-        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-          <Link
-            href="/track-order"
-            style={{
-              color: "#fff",
-              fontSize: "0.75rem",
-              fontWeight: 700,
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "4px",
-            }}
-          >
-            <TruckIcon size={14} /> Track Order
-          </Link>
-        </div>
-      </div>
-
       <div className="header-main wrap">
         <button
           className="icon-button menu-toggle"

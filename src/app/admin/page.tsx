@@ -472,8 +472,12 @@ export default function AdminDashboardPage() {
               { title: "👗 Products & Inventory", desc: "Add, edit, stock count, SKU, prices & sizes.", href: "/admin/products" },
               { title: "📦 Order Dispatch", desc: "View items, update status, and manage courier details.", href: "/admin/orders" },
               { title: "🚚 Shipping & Couriers", desc: "Manage GIGL, DHL, FedEx tracking and dispatch queue.", href: "/admin/shipping" },
+              { title: "💳 Payments", desc: "Verify transactions, webhooks, and refunds.", href: "/admin/payments" },
               { title: "👥 Registered Clients", desc: "Client contact info, addresses, and order history.", href: "/admin/customers" },
+              { title: "✅ User Approvals", desc: "Review and approve new registered customers.", href: "/admin/approvals" },
               { title: "💬 Live Chat Inbox", desc: "Reply in real time to customer sizing & order inquiries.", href: "/admin/messages" },
+              { title: "👁️ Visitor Analytics", desc: "Privacy-conscious tracking of storefront visitors.", href: "/admin/visitors" },
+              { title: "📈 Store Analytics", desc: "Revenue graphs, order volume, and performance.", href: "/admin/analytics" },
               { title: "⚙️ Store Configuration", desc: "Atelier details, default shipping fees & admin credentials.", href: "/admin/settings" },
             ].map((mod, i) => (
               <Link

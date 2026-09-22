@@ -869,6 +869,21 @@ details p {
   gap: 24px;
   padding-block: 24px;
   border-top: 1px solid var(--line);
+  min-width: 0;
+}
+
+.cart-photo-link,
+.cart-details {
+  min-width: 0;
+}
+
+.cart-photo {
+  width: 100%;
+}
+
+.cart-details h2,
+.cart-details p {
+  overflow-wrap: break-word;
 }
 
 .cart-row h2 {
@@ -930,6 +945,7 @@ details p {
 .order-summary {
   padding: 32px;
   background: var(--soft);
+  min-width: 0;
 }
 
 .order-summary h2 {
@@ -943,6 +959,15 @@ details p {
   gap: 20px;
   margin: 16px 0;
   font-size: 0.875rem;
+}
+
+.summary-line span {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.summary-line span:last-child {
+  text-align: right;
 }
 
 .summary-total {
@@ -1094,8 +1119,15 @@ details p {
   .category-grid, .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; }
   .product-detail { grid-template-columns: 1fr; gap: 20px; }
   .cart-layout, .checkout-layout { grid-template-columns: 1fr; gap: 28px; }
-  .cart-row { grid-template-columns: 80px 1fr; gap: 16px; position: relative; padding-bottom: 42px; }
-  .cart-row .remove-item { position: absolute; bottom: 14px; right: 0; }
+  .cart-row { display: grid; grid-template-columns: clamp(90px, 30vw, 130px) minmax(0, 1fr); grid-template-rows: auto auto; gap: 12px 16px; padding-block: 20px; position: static; }
+  .cart-row .cart-photo-link { grid-column: 1; grid-row: 1 / 3; }
+  .cart-row .cart-details { grid-column: 2; grid-row: 1; min-width: 0; }
+  .cart-row .remove-item { position: static; grid-column: 2; grid-row: 2; justify-self: start; align-self: start; margin-top: 4px; padding: 4px 0; }
+  .cart-row h2 { font-size: 1rem; word-wrap: break-word; overflow-wrap: break-word; }
+  .quantity-controls { margin-top: 12px; }
+  .order-summary { padding: 22px 18px; margin-bottom: 70px; }
+  .order-summary h2 { font-size: 1.35rem; margin-bottom: 20px; }
+  .summary-line { gap: 12px; }
   .footer-grid { grid-template-columns: 1fr; gap: 32px; }
   .footer-intro { grid-column: auto; }
   .footer-bottom { flex-direction: column; gap: 10px; }

@@ -46,7 +46,7 @@ export default function CartPage() {
       </header>
 
       <div className="cart-layout">
-        <div>
+        <div className="cart-items">
           {cart.map((item, index) => {
             const product = item.product;
             if (!product) return null;
@@ -55,8 +55,8 @@ export default function CartPage() {
 
             return (
               <article key={`${item.productId}-${item.size}-${index}`} className="cart-row">
-                <Link href={`/product/${product.id}`}>
-                  <div className={`photo q${product.quadrant}`} style={{ width: "110px" }}>
+                <Link href={`/product/${product.id}`} className="cart-photo-link">
+                  <div className={`photo cart-photo q${product.quadrant}`}>
                     <img
                       src={`/images/${product.sheet}`}
                       alt={product.name}
@@ -66,11 +66,12 @@ export default function CartPage() {
                   </div>
                 </Link>
 
-                <div>
+                <div className="cart-details">
                   <h2>
                     <Link href={`/product/${product.id}`}>{product.name}</Link>
                   </h2>
                   <p>Size: {item.size}</p>
+                  {product.colors?.[0] && <p>Colour: {product.colors[0]}</p>}
                   <p className="price">{formatMoney(lineTotal, currency)}</p>
 
                   <div className="quantity-controls">
