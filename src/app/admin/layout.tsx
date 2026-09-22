@@ -30,6 +30,7 @@ export default function AdminLayout({
     { label: "Shipping", href: "/admin/shipping", icon: "🚚" },
     { label: "Payments", href: "/admin/payments", icon: "💳" },
     { label: "Analytics", href: "/admin/analytics", icon: "📈" },
+    { label: "API Integrations", href: "/admin/integrations", icon: "🔌" },
     { label: "Settings", href: "/admin/settings", icon: "⚙️" },
   ];
 
