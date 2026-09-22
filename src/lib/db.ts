@@ -11,6 +11,17 @@ let pool: Pool | null = null;
 let dbInstance: NodePgDatabase<typeof schema> | null = null;
 let dbConnectionFailed = false;
 
+function normalizeDatabaseUrl(connectionString: string): string {
+  const url = new URL(connectionString);
+  const sslMode = url.searchParams.get("sslmode");
+
+  if (sslMode && ["prefer", "require", "verify-ca"].includes(sslMode.toLowerCase())) {
+    url.searchParams.set("sslmode", "verify-full");
+  }
+
+  return url.toString();
+}
+
 export function getDb(): NodePgDatabase<typeof schema> | null {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
@@ -25,10 +36,11 @@ export function getDb(): NodePgDatabase<typeof schema> | null {
 
   if (!dbInstance) {
     try {
+      const normalizedConnectionString = normalizeDatabaseUrl(connectionString);
       pool = new Pool({
-        connectionString,
+        connectionString: normalizedConnectionString,
         ssl:
-          connectionString.includes("localhost") || connectionString.includes("127.0.0.1")
+          normalizedConnectionString.includes("localhost") || normalizedConnectionString.includes("127.0.0.1")
             ? false
             : { rejectUnauthorized: false },
         max: 5,

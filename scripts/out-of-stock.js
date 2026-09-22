@@ -1,4 +1,15 @@
 const { Pool } = require("pg");
+
+function normalizeDatabaseUrl(connectionString) {
+  const url = new URL(connectionString);
+  const sslMode = url.searchParams.get("sslmode");
+
+  if (sslMode && ["prefer", "require", "verify-ca"].includes(sslMode.toLowerCase())) {
+    url.searchParams.set("sslmode", "verify-full");
+  }
+
+  return url.toString();
+}
 const fs = require("fs");
 const path = require("path");
 
@@ -30,10 +41,11 @@ async function markOutOfStock() {
 
   if (databaseUrl && !databaseUrl.includes("user:password@localhost")) {
     console.log("Connecting to PostgreSQL at DATABASE_URL...");
+    const normalizedDatabaseUrl = normalizeDatabaseUrl(databaseUrl);
     const pool = new Pool({
-      connectionString: databaseUrl,
+      connectionString: normalizedDatabaseUrl,
       ssl:
-        databaseUrl.includes("localhost") || databaseUrl.includes("127.0.0.1")
+        normalizedDatabaseUrl.includes("localhost") || normalizedDatabaseUrl.includes("127.0.0.1")
           ? false
           : { rejectUnauthorized: false },
     });
