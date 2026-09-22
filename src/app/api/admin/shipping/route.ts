@@ -23,6 +23,11 @@ export async function GET() {
           .orderBy(desc(schema.orders.createdAt));
 
         for (const ord of orderRows) {
+          const eventRows = await db
+            .select()
+            .from(schema.shippingEvents)
+            .where(eq(schema.shippingEvents.orderId, ord.id))
+            .orderBy(desc(schema.shippingEvents.createdAt));
           shipments.push({
             orderId: ord.id,
             orderNumber: ord.orderNumber,
@@ -37,6 +42,7 @@ export async function GET() {
             trackingStatus: ord.trackingStatus || "Preparing in Atelier",
             shippingFee: ord.shippingFee,
             estimatedDelivery: ord.estimatedDelivery || "2-4 Business Days",
+            trackingEvents: eventRows,
             createdAt: ord.createdAt ? ord.createdAt.toISOString() : new Date().toISOString(),
           });
         }
@@ -117,7 +123,13 @@ export async function PATCH(req: Request) {
           .set(updates)
           .where(eq(schema.orders.orderNumber, orderNumber));
 
-        // Sync shipping table
+        const normalizedStatus = status === "delivered" ? "delivered" : status === "shipped" ? "in_transit" : status === "out_for_delivery" ? "out_for_delivery" : status === "delayed" ? "delayed" : "preparing";
+        const orderStatus = status === "delivered" ? "delivered" : status === "shipped" ? "shipped" : status === "out_for_delivery" ? "out_for_delivery" : status === "preparing" ? "processing" : undefined;
+        if (orderStatus) {
+          await db.update(schema.orders).set({ status: orderStatus }).where(eq(schema.orders.orderNumber, orderNumber));
+        }
+
+        // Keep the legacy shipment summary in sync and append an auditable event.
         const ordRes = await db
           .select()
           .from(schema.orders)
@@ -133,11 +145,16 @@ export async function PATCH(req: Request) {
               carrier: carrier || ord.trackingCarrier || "GIG Logistics",
               trackingNumber: trackingNumber || ord.trackingNumber,
               trackingUrl: trackingUrl || ord.trackingUrl,
-              status: status === "delivered" ? "delivered" : status === "shipped" ? "in_transit" : "preparing",
+              status: normalizedStatus,
               shippingFee: ord.shippingFee,
               estimatedDelivery: estimatedDelivery || ord.estimatedDelivery,
             })
             .onConflictDoNothing();
+          await db.insert(schema.shippingEvents).values({
+            orderId: ord.id,
+            status: normalizedStatus,
+            message: trackingStatus || `Shipment status updated to ${normalizedStatus}`,
+          });
         }
       } catch (err) {
         console.warn("DB update shipping error:", err);

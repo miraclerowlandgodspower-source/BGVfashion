@@ -13,8 +13,14 @@ let dbConnectionFailed = false;
 
 export function getDb(): NodePgDatabase<typeof schema> | null {
   const connectionString = process.env.DATABASE_URL;
-  if (!connectionString || dbConnectionFailed) {
+  if (!connectionString) {
     return null;
+  }
+
+  if (dbConnectionFailed) {
+    pool = null;
+    dbInstance = null;
+    dbConnectionFailed = false;
   }
 
   if (!dbInstance) {
@@ -26,14 +32,16 @@ export function getDb(): NodePgDatabase<typeof schema> | null {
             ? false
             : { rejectUnauthorized: false },
         max: 5,
-        idleTimeoutMillis: 10000,
-        connectionTimeoutMillis: 3000,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
       });
 
       // Prevent unhandled error event on the pool from crashing the Node.js process
       pool.on("error", (err) => {
         console.warn("PostgreSQL pool connection notice (falling back to memory):", err?.message || err);
         dbConnectionFailed = true;
+        dbInstance = null;
+        pool = null;
       });
 
       dbInstance = drizzle(pool, { schema });

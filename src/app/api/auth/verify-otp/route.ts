@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb, inMemoryStore } from "@/lib/db";
 import * as schema from "@/db/schema";
-import { createSessionToken, COOKIE_NAME } from "@/lib/auth";
 import { eq, and, desc } from "drizzle-orm";
 
 export async function POST(req: Request) {
@@ -28,6 +27,19 @@ export async function POST(req: Request) {
         if (rows.length > 0 && new Date(rows[0].expiresAt).getTime() > Date.now()) {
           isValid = true;
           await db.update(schema.emailOtps).set({ verified: true }).where(eq(schema.emailOtps.id, rows[0].id));
+        } else {
+          const latest = await db.select().from(schema.emailOtps).where(eq(schema.emailOtps.email, normalizedEmail)).orderBy(desc(schema.emailOtps.createdAt)).limit(1);
+          if (latest[0]) {
+            const attempts = latest[0].attempts + 1;
+            await db.update(schema.emailOtps).set({ attempts }).where(eq(schema.emailOtps.id, latest[0].id));
+            if (attempts >= 5) {
+              const userRows = await db.select().from(schema.users).where(eq(schema.users.email, normalizedEmail)).limit(1);
+              if (userRows[0]) {
+                const signals = [...(userRows[0].riskSignals || []), "repeated_failed_otp_attempts"];
+                await db.update(schema.users).set({ riskStatus: "REVIEW_REQUIRED", riskScore: Math.max(userRows[0].riskScore, 40), riskSignals: [...new Set(signals)] }).where(eq(schema.users.id, userRows[0].id));
+              }
+            }
+          }
         }
       } catch (err) {
         console.warn("DB OTP verify notice:", err);
@@ -90,7 +102,7 @@ export async function POST(req: Request) {
       message: "Email verified successfully. Your account is awaiting administrator approval.",
       data: { status: updatedStatus },
     });
-  } catch (error: any) {
+  } catch {
     return NextResponse.json({ success: false, error: "Verification failed." }, { status: 500 });
   }
 }

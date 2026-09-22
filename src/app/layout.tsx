@@ -7,6 +7,7 @@ import { Toast } from "@/components/Toast";
 import { RegionModal } from "@/components/RegionModal";
 import { CookieBanner } from "@/components/CookieBanner";
 import { LiveChat } from "@/components/LiveChat";
+import { VisitorTracker } from "@/components/VisitorTracker";
 
 export const metadata: Metadata = {
   title: "BGV Fashion — Luxury Contemporary Wardrobe",
@@ -23,9 +24,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body>
         <StoreProvider>
+          <VisitorTracker />
           <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
             <Header />
             <main style={{ flex: 1 }}>{children}</main>

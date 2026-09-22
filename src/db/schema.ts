@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, boolean, jsonb, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, boolean, jsonb, uuid, index, unique } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -8,6 +8,14 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   role: text("role").default("customer").notNull(), // 'customer', 'admin'
   accountStatus: text("account_status").default("EMAIL_UNVERIFIED").notNull(), // EMAIL_UNVERIFIED, PENDING_ADMIN_APPROVAL, ACTIVE, SUSPENDED, REJECTED
+  riskStatus: text("risk_status").default("CLEAR").notNull(), // CLEAR, REVIEW_REQUIRED, SPAM_SUSPECTED
+  riskScore: integer("risk_score").default(0).notNull(),
+  riskSignals: jsonb("risk_signals").$type<string[]>().notNull().default([]),
+  registrationIp: text("registration_ip"),
+  registrationSessionId: text("registration_session_id"),
+  approvedAt: timestamp("approved_at"),
+  approvedBy: uuid("approved_by"),
+  rejectionReason: text("rejection_reason"),
   emailVerifiedAt: timestamp("email_verified_at"),
   lastLoginAt: timestamp("last_login_at"),
   failedLoginAttempts: integer("failed_login_attempts").default(0).notNull(),
@@ -217,6 +225,21 @@ export const emailOtps = pgTable("email_otps", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const registrationRiskEvents = pgTable("registration_risk_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  email: text("email").notNull(),
+  ipAddress: text("ip_address"),
+  sessionId: text("session_id"),
+  eventType: text("event_type").notNull(),
+  riskScore: integer("risk_score").notNull().default(0),
+  signals: jsonb("signals").$type<string[]>().notNull().default([]),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("registration_risk_email_idx").on(table.email),
+  index("registration_risk_ip_idx").on(table.ipAddress),
+  index("registration_risk_created_idx").on(table.createdAt),
+]);
+
 export const storeSettings = pgTable("store_settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
@@ -239,6 +262,19 @@ export const visitorAnalytics = pgTable("visitor_analytics", {
 }, (table) => [
   index("visitor_analytics_session_idx").on(table.sessionId),
   index("visitor_analytics_last_activity_idx").on(table.lastActivityAt),
+  unique("visitor_analytics_session_unique").on(table.sessionId),
+]);
+
+export const shippingEvents = pgTable("shipping_events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }).notNull(),
+  status: text("status").notNull(),
+  message: text("message"),
+  location: text("location"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("shipping_events_order_idx").on(table.orderId),
+  index("shipping_events_created_idx").on(table.createdAt),
 ]);
 
 export const adminAuditLogs = pgTable("admin_audit_logs", {

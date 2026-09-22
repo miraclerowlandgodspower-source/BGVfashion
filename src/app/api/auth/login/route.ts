@@ -41,10 +41,25 @@ export async function POST(req: Request) {
 
     const isMatch = await comparePassword(password, user.passwordHash);
     if (!isMatch) {
+      if (db) {
+        await db.update(schema.users).set({ failedLoginAttempts: (user.failedLoginAttempts || 0) + 1 }).where(eq(schema.users.id, user.id)).catch(() => undefined);
+      }
       return NextResponse.json(
         { success: false, error: "Invalid email address or password." },
         { status: 401 }
       );
+    }
+
+    if (user.role !== "admin" && user.accountStatus !== "ACTIVE") {
+      const messages: Record<string, string> = {
+        EMAIL_UNVERIFIED: "Please verify your email before signing in.",
+        PENDING_ADMIN_APPROVAL: "Your email is verified and your account is awaiting administrator approval.",
+        REVIEW_REQUIRED: "Your account requires administrator review before access is granted.",
+        SPAM_SUSPECTED: "Your registration requires administrator review.",
+        REJECTED: "This account registration was rejected.",
+        SUSPENDED: "This account is suspended. Contact support for help.",
+      };
+      return NextResponse.json({ success: false, error: messages[user.accountStatus] || "Your account is not active." }, { status: 403 });
     }
 
     const userObj = {

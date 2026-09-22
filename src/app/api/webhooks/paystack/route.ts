@@ -28,17 +28,14 @@ export async function POST(req: Request) {
             .where(eq(schema.orders.paystackReference, reference))
             .limit(1);
 
-          await db
-            .update(schema.orders)
-            .set({
-              status: "payment_confirmed",
-              paymentStatus: "paid",
-              paidAt: new Date(event.data.paid_at || Date.now()),
-            })
-            .where(eq(schema.orders.paystackReference, reference));
-
           if (orderRows.length > 0) {
             const ord = orderRows[0];
+            const amountMatches = Math.round((event.data.amount || 0) / 100) === ord.totalAmount && (event.data.currency || "NGN") === ord.currency;
+            if (!amountMatches) {
+              console.warn("Rejected Paystack webhook with an amount or currency mismatch.");
+              return NextResponse.json({ error: "Payment does not match order." }, { status: 400 });
+            }
+            await db.update(schema.orders).set({ status: "payment_confirmed", paymentStatus: "paid", paidAt: new Date(event.data.paid_at || Date.now()) }).where(eq(schema.orders.paystackReference, reference));
             await db
               .insert(schema.payments)
               .values({

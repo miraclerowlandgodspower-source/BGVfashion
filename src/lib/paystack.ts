@@ -38,7 +38,9 @@ export interface PaystackVerifyResponse {
   };
 }
 
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || "";
+function isPlaceholderSecret(secret: string | undefined) {
+  return !secret || secret.includes("placeholder") || secret.includes("your_paystack") || secret.startsWith("sk_test_demo");
+}
 
 export async function initializePaystackTransaction(
   options: InitializePaystackOptions
@@ -47,17 +49,8 @@ export async function initializePaystackTransaction(
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
   // If secret key is not set or is demo key, return a mock checkout URL for seamless dev
-  if (!secret || secret.startsWith("sk_test_demo") || secret === "sk_test_your_paystack_secret_key_here") {
-    console.warn("Paystack Secret Key is using test/development placeholder. Providing simulated checkout redirect.");
-    return {
-      status: true,
-      message: "Authorization URL created (development mode)",
-      data: {
-        authorization_url: `${baseUrl}/checkout/success?reference=${options.reference}&mode=simulated`,
-        access_code: `mock_acc_${options.reference}`,
-        reference: options.reference,
-      },
-    };
+  if (isPlaceholderSecret(secret)) {
+    throw new Error("PAYSTACK_SECRET_KEY must be a real server-side Paystack secret key before checkout can begin.");
   }
 
   const response = await fetch("https://api.paystack.co/transaction/initialize", {
@@ -89,8 +82,8 @@ export async function verifyPaystackTransaction(
 ): Promise<PaystackVerifyResponse> {
   const secret = process.env.PAYSTACK_SECRET_KEY;
 
-  if (!secret || secret === "sk_test_your_paystack_secret_key_here") {
-    throw new Error("Paystack secret key is not configured on the server. Server-side payment verification requires a valid PAYSTACK_SECRET_KEY.");
+  if (isPlaceholderSecret(secret)) {
+    throw new Error("PAYSTACK_SECRET_KEY must be a real server-side Paystack secret key before payments can be verified.");
   }
 
   const response = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {

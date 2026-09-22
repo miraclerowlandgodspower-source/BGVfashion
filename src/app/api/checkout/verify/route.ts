@@ -16,17 +16,33 @@ export async function GET(req: Request) {
       );
     }
 
-    const paystackVerification = await verifyPaystackTransaction(reference);
-    const isSuccessful = paystackVerification.data.status === "success";
-
     const db = getDb();
-    if (db && isSuccessful) {
+    let orderRows: any[] = [];
+    if (db) {
       try {
-        const orderRows = await db
+        orderRows = await db
           .select()
           .from(schema.orders)
           .where(eq(schema.orders.paystackReference, reference))
           .limit(1);
+      } catch (err) {
+        console.warn("Payment order lookup failed:", err);
+      }
+    }
+
+    const paystackVerification = await verifyPaystackTransaction(reference);
+    const isSuccessful = paystackVerification.data.status === "success";
+    const order = orderRows[0];
+    const verifiedAmount = Math.round((paystackVerification.data.amount || 0) / 100);
+    const amountMatches = !!order && verifiedAmount === order.totalAmount && (paystackVerification.data.currency || "NGN") === order.currency;
+    const paymentAccepted = isSuccessful && amountMatches;
+
+    if (db && order) {
+      try {
+        if (!paymentAccepted) {
+          await db.insert(schema.payments).values({ orderId: order.id, reference, provider: "Paystack", amount: verifiedAmount || order.totalAmount, currency: paystackVerification.data.currency || order.currency, status: "failed", rawResponse: paystackVerification.data as any }).onConflictDoNothing();
+          return NextResponse.json({ success: false, error: "Payment verification did not match the order amount or currency." }, { status: 400 });
+        }
 
         await db
           .update(schema.orders)
@@ -37,22 +53,7 @@ export async function GET(req: Request) {
           })
           .where(eq(schema.orders.paystackReference, reference));
 
-        if (orderRows.length > 0) {
-          const ord = orderRows[0];
-          await db
-            .insert(schema.payments)
-            .values({
-              orderId: ord.id,
-              reference,
-              provider: "Paystack",
-              amount: paystackVerification.data.amount ? Math.round(paystackVerification.data.amount / 100) : ord.totalAmount,
-              currency: paystackVerification.data.currency || "NGN",
-              status: "success",
-              paidAt: new Date(paystackVerification.data.paid_at || Date.now()),
-              rawResponse: paystackVerification.data as any,
-            })
-            .onConflictDoNothing();
-        }
+        await db.insert(schema.payments).values({ orderId: order.id, reference, provider: "Paystack", amount: verifiedAmount, currency: paystackVerification.data.currency || "NGN", status: "success", paidAt: new Date(paystackVerification.data.paid_at || Date.now()), rawResponse: paystackVerification.data as any }).onConflictDoNothing();
       } catch (err) {
         console.warn("DB order status update notice:", err);
       }
@@ -61,16 +62,16 @@ export async function GET(req: Request) {
     // Update in-memory order
     const memOrder = inMemoryStore.orders.get(reference);
     if (memOrder) {
-      memOrder.status = isSuccessful ? "payment_confirmed" : "pending";
-      memOrder.paymentStatus = isSuccessful ? "paid" : "failed";
-      memOrder.paidAt = isSuccessful ? new Date().toISOString() : null;
+      memOrder.status = paymentAccepted ? "payment_confirmed" : "pending";
+      memOrder.paymentStatus = paymentAccepted ? "paid" : "failed";
+      memOrder.paidAt = paymentAccepted ? new Date().toISOString() : null;
     }
 
     return NextResponse.json({
-      success: isSuccessful,
+      success: paymentAccepted,
       data: {
         reference,
-        status: isSuccessful ? "paid" : "pending",
+        status: paymentAccepted ? "paid" : "failed",
         order: memOrder || null,
       },
     });

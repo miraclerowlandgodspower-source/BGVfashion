@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { formatMoney } from "@/lib/money";
 
 const COURIER_OPTIONS = [
   "GIG Logistics",
@@ -94,7 +93,7 @@ export default function AdminShippingPage() {
               ? "shipped"
               : shipmentStatus === "out_for_delivery"
               ? "out_for_delivery"
-              : activeShipment.status,
+              : "processing",
           trackingStatus:
             shipmentStatus === "delivered"
               ? "Delivered to Client"
@@ -517,6 +516,18 @@ export default function AdminShippingPage() {
                 <strong>Destination:</strong> {activeShipment.shippingAddress?.addressLine}, {activeShipment.shippingAddress?.city}, {activeShipment.shippingAddress?.state}, {activeShipment.shippingAddress?.country || "Nigeria"}
                 {activeShipment.customerPhone && <div>📞 {activeShipment.customerPhone}</div>}
               </div>
+
+              {activeShipment.trackingEvents?.length > 0 && (
+                <div style={{ border: "1px solid #e5e7eb", borderRadius: "6px", padding: "12px 16px", marginBottom: "20px" }}>
+                  <strong style={{ display: "block", fontSize: "0.82rem", marginBottom: "8px" }}>Tracking Events</strong>
+                  {activeShipment.trackingEvents.map((event: any) => (
+                    <div key={event.id} style={{ display: "flex", justifyContent: "space-between", gap: "12px", padding: "7px 0", borderTop: "1px solid #f3f4f6", fontSize: "0.78rem" }}>
+                      <span><strong>{event.status}</strong>{event.message ? ` · ${event.message}` : ""}</span>
+                      <span style={{ color: "#6b7280", whiteSpace: "nowrap" }}>{new Date(event.createdAt).toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div style={{ marginBottom: "16px" }}>
                 <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 700, marginBottom: "6px" }}>

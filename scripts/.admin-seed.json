@@ -2,7 +2,7 @@
   "id": "admin-root-id",
   "name": "BGV Chief Administrator",
   "email": "admin@bgvfashion.shop",
-  "passwordHash": "$2b$10$sLA9ui0wp62gpkB3NmsPau6L2ttl.vt.YFEOVjfpzR6wsdkWWAf0S",
+  "passwordHash": "$2b$10$eosu2wwQyy7iSQV9xsJ0COJ3M8CTe09y29UpScc5mw3egtuw8xnOy",
   "role": "admin",
-  "createdAt": "2026-09-22T09:54:20.032Z"
+  "createdAt": "2026-09-22T11:33:56.342Z"
 }
