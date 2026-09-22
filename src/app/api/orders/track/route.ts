@@ -21,12 +21,13 @@ export async function GET(req: Request) {
         const found = await db
           .select()
           .from(schema.orders)
-          .where(or(eq(schema.orders.orderNumber, query), eq(schema.orders.paystackReference, query)))
+          .where(or(eq(schema.orders.orderNumber, query), eq(schema.orders.paystackReference, query), eq(schema.orders.trackingNumber, query), eq(schema.orders.customerEmail, query.toLowerCase())))
           .limit(1);
 
         if (found.length > 0) {
           order = found[0];
           items = await db.select().from(schema.orderItems).where(eq(schema.orderItems.orderId, order.id));
+          order.trackingEvents = await db.select().from(schema.shippingEvents).where(eq(schema.shippingEvents.orderId, order.id)).orderBy(schema.shippingEvents.createdAt);
         }
       } catch (err) {
         console.warn("DB track error:", err);
@@ -39,35 +40,6 @@ export async function GET(req: Request) {
     }
 
     if (!order) {
-      // Return simulated active sample tracking for testing if non-existent
-      if (query.toUpperCase().startsWith("BGV-")) {
-        return NextResponse.json({
-          success: true,
-          data: {
-            order: {
-              orderNumber: query.toUpperCase(),
-              status: "shipped",
-              trackingCarrier: "GIG Logistics",
-              trackingNumber: `GIGL-${Math.floor(10000000 + Math.random() * 90000000)}`,
-              trackingStatus: "In Transit — Dispatched from Ojo Distribution Hub",
-              estimatedDelivery: "In 1–2 business days",
-              createdAt: new Date(Date.now() - 86400000).toISOString(),
-              totalAmount: 48500,
-              currency: "NGN",
-              shippingAddress: {
-                fullName: "Valued Client",
-                city: "Lekki Phase 1",
-                state: "Lagos",
-                country: "Nigeria",
-              },
-            },
-            items: [
-              { productName: "The Wide-Leg Denim", size: "M", quantity: 1, unitPrice: 46000 },
-            ],
-          },
-        });
-      }
-
       return NextResponse.json({
         success: false,
         error: `No order found matching "${query}". Please check the reference in your confirmation email.`,
@@ -82,6 +54,7 @@ export async function GET(req: Request) {
           trackingCarrier: order.trackingCarrier || "GIG Logistics",
           trackingNumber: order.trackingNumber || `TRK-${order.orderNumber}`,
           trackingStatus: order.trackingStatus || (order.status === "paid" ? "Preparing in Ojo Atelier" : order.status),
+          trackingEvents: order.trackingEvents || [],
           estimatedDelivery: order.estimatedDelivery || "2–4 business days",
         },
         items,

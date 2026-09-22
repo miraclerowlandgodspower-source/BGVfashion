@@ -116,6 +116,7 @@ export default function AdminOrdersPage() {
       ord.customerEmail?.toLowerCase().includes(q) ||
       ord.customerPhone?.toLowerCase().includes(q) ||
       ord.paystackReference?.toLowerCase().includes(q) ||
+      ord.paystackTransactionId?.toLowerCase().includes(q) ||
       ord.trackingNumber?.toLowerCase().includes(q);
 
     const matchesStatus =
@@ -585,6 +586,9 @@ export default function AdminOrdersPage() {
                   <div style={{ fontSize: "0.82rem", color: "#4b5563", marginTop: "2px", fontFamily: "monospace" }}>
                     Ref: {activeOrder.paystackReference || "Direct Atelier Verification"}
                   </div>
+                  <div style={{ fontSize: "0.82rem", color: "#4b5563", marginTop: "2px", fontFamily: "monospace" }}>
+                    Transaction ID: {activeOrder.paystackTransactionId || "Not available"}
+                  </div>
                   <div style={{ fontSize: "0.82rem", color: "#4b5563", marginTop: "2px" }}>
                     Status: <strong>{activeOrder.paymentStatus || activeOrder.status}</strong>
                     {activeOrder.paidAt && <span> (Verified {new Date(activeOrder.paidAt).toLocaleDateString()})</span>}
@@ -597,6 +601,9 @@ export default function AdminOrdersPage() {
                   </div>
                   <div style={{ fontSize: "0.82rem", color: "#6b7280", marginTop: "2px" }}>
                     Delivery / Shipping Fee: {formatMoney(activeOrder.shippingFee || 0, activeOrder.currency)}
+                  </div>
+                  <div style={{ fontSize: "0.82rem", color: "#6b7280", marginTop: "2px" }}>
+                    VAT (7% of delivery): {formatMoney(activeOrder.taxFee || 0, activeOrder.currency)}
                   </div>
                   <div style={{ fontSize: "1.15rem", fontWeight: 900, color: "var(--plum, #4a154b)", marginTop: "6px" }}>
                     Total Amount: {formatMoney(activeOrder.totalAmount, activeOrder.currency)}

@@ -81,6 +81,9 @@ export default function AccountPage() {
         <button type="button" className="button secondary" onClick={logout}>
           Sign Out
         </button>
+        <Link href="/account/security" className="button secondary">
+          Security Settings
+        </Link>
       </header>
 
       <section style={{ marginTop: "36px" }}>

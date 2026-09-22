@@ -113,6 +113,13 @@ function SuccessContent() {
                 </strong>
               </div>
             )}
+            {order && (
+              <div style={{ borderTop: "1px solid var(--line)", marginTop: "14px", paddingTop: "14px", display: "grid", gap: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".875rem" }}><span>Subtotal</span><strong>{formatMoney(order.subtotal, order.currency || currency)}</strong></div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".875rem" }}><span>Delivery fee</span><strong>{formatMoney(order.shippingFee, order.currency || currency)}</strong></div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: ".875rem" }}><span>VAT (7% of delivery)</span><strong>{formatMoney(order.taxFee, order.currency || currency)}</strong></div>
+              </div>
+            )}
           </div>
         )}
 

@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { getDb, inMemoryStore } from "@/lib/db";
 import * as schema from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { createSessionToken, COOKIE_NAME, getCookieOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
-    const { email, code, name } = await req.json();
+    const { email, code, name, purpose = "signup" } = await req.json();
 
     if (!email || !code) {
       return NextResponse.json({ success: false, error: "Email and verification code are required." }, { status: 400 });
@@ -80,28 +81,32 @@ export async function POST(req: Request) {
       }
     }
 
-    const updatedStatus = "PENDING_ADMIN_APPROVAL";
+    if (purpose === "login" && user.role !== "admin" && user.accountStatus !== "ACTIVE") {
+      return NextResponse.json({ success: false, error: "Your account is not active for sign in." }, { status: 403 });
+    }
+
+    const updatedStatus = purpose === "login" ? user.accountStatus : "PENDING_ADMIN_APPROVAL";
     if (db) {
       try {
-        await db
-          .update(schema.users)
-          .set({ accountStatus: updatedStatus, emailVerifiedAt: new Date() })
-          .where(eq(schema.users.email, normalizedEmail));
-      } catch (err) {
-        console.warn("DB status update notice:", err);
-      }
+        await db.update(schema.users).set({ ...(purpose === "login" ? {} : { accountStatus: updatedStatus }), emailVerifiedAt: new Date() }).where(eq(schema.users.email, normalizedEmail));
+      } catch (err) { console.warn("DB status update notice:", err); }
     }
     if (user && inMemoryStore.users.has(normalizedEmail)) {
       const existing = inMemoryStore.users.get(normalizedEmail)!;
-      existing.accountStatus = updatedStatus;
+      if (purpose !== "login") existing.accountStatus = updatedStatus;
       existing.name = existing.name || (name?.trim() || normalizedEmail.split("@")[0]);
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
-      message: "Email verified successfully. Your account is awaiting administrator approval.",
-      data: { status: updatedStatus },
+      message: purpose === "login" ? "Email code verified." : "Email verified successfully. Your account is awaiting administrator approval.",
+      data: {
+        status: updatedStatus,
+        user: { id: user.id, name: user.name, email: user.email, role: user.role || "customer" },
+      },
     });
+    if (purpose === "login") response.cookies.set({ name: COOKIE_NAME, value: await createSessionToken({ id: user.id, name: user.name, email: user.email, role: user.role || "customer" }), ...getCookieOptions() });
+    return response;
   } catch {
     return NextResponse.json({ success: false, error: "Verification failed." }, { status: 500 });
   }

@@ -4,12 +4,24 @@ import React from "react";
 import Link from "next/link";
 import { useStore } from "@/context/StoreContext";
 import { formatMoney } from "@/lib/money";
+import { calculateVatFee } from "@/lib/order-totals";
+import { useRouter } from "next/navigation";
 
 export default function CartPage() {
-  const { cart, updateCartQuantity, removeFromCart, cartSubtotal, currency } = useStore();
+  const router = useRouter();
+  const { cart, updateCartQuantity, removeFromCart, cartSubtotal, currency, user, authReady } = useStore();
 
-  const shippingEstimate = cartSubtotal > 100000 || cartSubtotal === 0 ? 0 : 3500;
-  const orderTotal = cartSubtotal + shippingEstimate;
+  const shippingEstimate = 3500;
+  const vatFee = calculateVatFee(shippingEstimate);
+  const orderTotal = cartSubtotal + shippingEstimate + vatFee;
+
+  React.useEffect(() => {
+    if (authReady && !user) router.replace(`/login?returnTo=${encodeURIComponent("/cart")}`);
+  }, [authReady, router, user]);
+
+  if (!authReady || !user) {
+    return <div className="wrap" style={{ padding: "100px 0", textAlign: "center" }}><h2>Sign in to review your shopping bag.</h2><p style={{ color: "var(--muted)", marginTop: "12px" }}>Redirecting you to secure sign in...</p></div>;
+  }
 
   if (cart.length === 0) {
     return (
@@ -118,9 +130,12 @@ export default function CartPage() {
 
           <div className="summary-line">
             <span>Estimated Delivery</span>
-            <span>
-              {shippingEstimate === 0 ? "Complimentary" : formatMoney(shippingEstimate, currency)}
-            </span>
+            <span>{formatMoney(shippingEstimate, currency)}</span>
+          </div>
+
+          <div className="summary-line">
+            <span>VAT (7% of delivery)</span>
+            <span>{formatMoney(vatFee, currency)}</span>
           </div>
 
           <div className="summary-line summary-total">

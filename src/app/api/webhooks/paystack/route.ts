@@ -3,6 +3,7 @@ import { verifyPaystackWebhookSignature } from "@/lib/paystack";
 import { getDb, inMemoryStore } from "@/lib/db";
 import * as schema from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { sendOrderReceiptEmails } from "@/lib/order-email";
 
 export async function POST(req: Request) {
   try {
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
               console.warn("Rejected Paystack webhook with an amount or currency mismatch.");
               return NextResponse.json({ error: "Payment does not match order." }, { status: 400 });
             }
-            await db.update(schema.orders).set({ status: "payment_confirmed", paymentStatus: "paid", paidAt: new Date(event.data.paid_at || Date.now()) }).where(eq(schema.orders.paystackReference, reference));
+            await db.update(schema.orders).set({ status: "payment_confirmed", paymentStatus: "paid", paidAt: new Date(event.data.paid_at || Date.now()), paystackTransactionId: String(event.data.id || "") }).where(eq(schema.orders.paystackReference, reference));
             await db
               .insert(schema.payments)
               .values({
@@ -51,6 +52,11 @@ export async function POST(req: Request) {
                 rawResponse: event.data as any,
               })
               .onConflictDoNothing();
+            if (!ord.receiptSentAt) {
+              const items = await db.select().from(schema.orderItems).where(eq(schema.orderItems.orderId, ord.id));
+              const sent = await sendOrderReceiptEmails({ ...ord, status: "payment_confirmed", paymentStatus: "paid", paystackTransactionId: String(event.data.id || ""), createdAt: ord.createdAt.toISOString() } as any, items as any, String(event.data.id || ""));
+              if (sent) await db.update(schema.orders).set({ receiptSentAt: new Date() }).where(eq(schema.orders.id, ord.id));
+            }
           }
         } catch (dbErr) {
           console.warn("Webhook DB update error:", dbErr);

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/lib/money";
 import { TruckIcon, CheckIcon } from "@/components/Icons";
+import { DeliveryMap } from "@/components/DeliveryMap";
 
 export default function TrackOrderPage() {
   const [query, setQuery] = useState("");
@@ -153,6 +154,12 @@ export default function TrackOrderPage() {
             </div>
           </div>
 
+          <div className="tracking-status-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginTop: 24 }}>
+            <div><small>Order status</small><strong style={{ display: "block", textTransform: "capitalize" }}>{order.status}</strong></div>
+            <div><small>Payment status</small><strong style={{ display: "block", textTransform: "capitalize" }}>{order.paymentStatus || "pending"}</strong></div>
+            <div><small>Delivery status</small><strong style={{ display: "block" }}>{order.trackingStatus || order.status}</strong></div>
+          </div>
+
           {/* Timeline */}
           <div style={{ margin: "36px 0" }}>
             <h3 style={{ marginBottom: "20px", fontSize: "1.1rem" }}>Shipment Timeline</h3>
@@ -187,7 +194,7 @@ export default function TrackOrderPage() {
           </div>
 
           {/* Courier & Destination details */}
-          <div
+          <div className="tracking-detail-grid"
             style={{
               background: "#fff",
               border: "1px solid var(--line)",
@@ -220,6 +227,10 @@ export default function TrackOrderPage() {
               </div>
             </div>
           </div>
+
+          <div style={{ marginTop: 28 }}><h3 style={{ fontSize: "1.05rem", marginBottom: 12 }}>Delivery map</h3><DeliveryMap latitude={order.lastKnownLatitude} longitude={order.lastKnownLongitude} /></div>
+
+          {order.trackingEvents?.length > 0 && <div style={{ marginTop: 28 }}><h3 style={{ fontSize: "1.05rem", marginBottom: 12 }}>Verified delivery events</h3><div style={{ display: "grid", gap: 10 }}>{order.trackingEvents.map((event: any) => <div key={event.id || `${event.status}-${event.createdAt}`} style={{ borderLeft: "2px solid var(--plum)", paddingLeft: 12 }}><strong>{event.status}</strong><p style={{ color: "var(--muted)", fontSize: ".85rem" }}>{event.message || "Status updated"}{event.location ? ` · ${event.location}` : ""}</p><small style={{ color: "var(--muted)" }}>{event.createdAt ? new Date(event.createdAt).toLocaleString() : ""}</small></div>)}</div></div>}
 
           {/* Items Purchased */}
           {items.length > 0 && (

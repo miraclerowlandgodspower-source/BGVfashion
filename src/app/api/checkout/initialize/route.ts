@@ -5,10 +5,16 @@ import * as schema from "@/db/schema";
 import { initializePaystackTransaction } from "@/lib/paystack";
 import { calculateShippingFee } from "@/lib/shipping";
 import { Order } from "@/types";
+import { calculateOrderTotal } from "@/lib/order-totals";
 
 export async function POST(req: Request) {
   try {
     const { items, shippingAddress, currency = "NGN" } = await req.json();
+    const user = await getSessionUser();
+
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Please sign in before checking out." }, { status: 401 });
+    }
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -44,6 +50,7 @@ export async function POST(req: Request) {
       verifiedItems.push({
         productId: product.id,
         productName: product.name,
+        colour: item.colour || product.colors?.[0] || null,
         size: item.size || "M",
         quantity: qty,
         unitPrice: product.price,
@@ -59,11 +66,10 @@ export async function POST(req: Request) {
       subtotal,
     });
 
-    const shippingFee = shippingCalc.fee;
-    const taxFee = 0;
-    const totalAmount = subtotal + shippingFee + taxFee;
-
-    const user = await getSessionUser();
+    const totals = calculateOrderTotal(subtotal, shippingCalc.fee);
+    const shippingFee = totals.deliveryFee;
+    const taxFee = totals.vatFee;
+    const totalAmount = totals.total;
     const orderId = crypto.randomUUID();
     const orderNumber = `BGV-${Date.now().toString(36).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`;
     const reference = `ref_${orderNumber}_${Date.now()}`;
@@ -92,7 +98,7 @@ export async function POST(req: Request) {
         await db.insert(schema.orders).values({
           id: orderId as any,
           orderNumber,
-          userId: (user?.id as any) || null,
+          userId: user.id as any,
           customerEmail: shippingAddress.email,
           customerName: shippingAddress.fullName,
           status: "pending",
@@ -115,6 +121,7 @@ export async function POST(req: Request) {
             orderId: orderId as any,
             productId: item.productId,
             productName: item.productName,
+            colour: item.colour,
             size: item.size,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
@@ -130,7 +137,7 @@ export async function POST(req: Request) {
     const orderRecord: Order = {
       id: orderId,
       orderNumber,
-      userId: user?.id || null,
+      userId: user.id,
       customerEmail: shippingAddress.email,
       customerName: shippingAddress.fullName,
       status: "pending",

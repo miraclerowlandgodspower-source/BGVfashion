@@ -93,6 +93,7 @@ export interface OrderItem {
   id?: string;
   productId: string;
   productName: string;
+  colour?: string | null;
   size: string;
   quantity: number;
   unitPrice: number;
@@ -128,14 +129,18 @@ export interface Order {
   paymentMethod?: string | null;
   paymentStatus?: "pending" | "paid" | "failed" | null;
   paystackReference?: string;
+  paystackTransactionId?: string | null;
   paystackAccessCode?: string;
   trackingCarrier?: string | null;
   trackingNumber?: string | null;
   trackingUrl?: string | null;
   trackingStatus?: string | null;
+  lastKnownLatitude?: string | null;
+  lastKnownLongitude?: string | null;
   estimatedDelivery?: string | null;
   notes?: string | null;
   paidAt?: string | null;
+  receiptSentAt?: string | null;
   createdAt: string;
   items: OrderItem[];
 }

@@ -1,13 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/context/StoreContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [returnTo, setReturnTo] = useState("/account");
   const { setUser, showToast } = useStore();
+
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get("returnTo");
+    if (requested?.startsWith("/")) setReturnTo(requested);
+  }, []);
 
   const [method, setMethod] = useState<"password" | "otp">("password");
   const [email, setEmail] = useState("");
@@ -36,7 +42,7 @@ export default function LoginPage() {
 
       setUser(json.data.user);
       showToast(`Welcome back, ${json.data.user.name}!`);
-      router.push("/account");
+      router.push(returnTo.startsWith("/") ? returnTo : "/account");
     } catch (err: any) {
       setError(err.message || "Invalid credentials. Please try again.");
     } finally {
@@ -80,7 +86,7 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code: otpCode }),
+        body: JSON.stringify({ email, code: otpCode, purpose: "login" }),
       });
 
       const json = await res.json();

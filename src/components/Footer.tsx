@@ -38,13 +38,13 @@ export function Footer() {
             </p>
 
             {/* Social Media Links */}
-            <div style={{ display: "flex", gap: "14px", marginTop: "20px", alignItems: "center" }}>
+            <div className="footer-socials">
               <a
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                style={{ color: "#d3c4ce", transition: "color 0.15s" }}
+                className="social-link"
               >
                 <InstagramIcon size={20} />
               </a>
@@ -53,7 +53,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="TikTok"
-                style={{ color: "#d3c4ce", transition: "color 0.15s" }}
+                className="social-link"
               >
                 <TikTokIcon size={20} />
               </a>
@@ -62,7 +62,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="YouTube"
-                style={{ color: "#d3c4ce", transition: "color 0.15s" }}
+                className="social-link"
               >
                 <YouTubeIcon size={20} />
               </a>
@@ -71,7 +71,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                style={{ color: "#d3c4ce", transition: "color 0.15s" }}
+                className="social-link"
               >
                 <FacebookIcon size={20} />
               </a>
@@ -80,7 +80,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Pinterest"
-                style={{ color: "#d3c4ce", transition: "color 0.15s" }}
+                className="social-link"
               >
                 <PinterestIcon size={20} />
               </a>
@@ -89,7 +89,7 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Snapchat"
-                style={{ color: "#d3c4ce", transition: "color 0.15s" }}
+                className="social-link"
               >
                 <SnapchatIcon size={20} />
               </a>

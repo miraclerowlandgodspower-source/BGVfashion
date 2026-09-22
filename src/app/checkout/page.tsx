@@ -6,10 +6,13 @@ import { useStore } from "@/context/StoreContext";
 import { formatMoney } from "@/lib/money";
 import { COUNTRIES_193, NIGERIAN_STATES_AND_CITIES } from "@/lib/locations";
 import { calculateShippingFee } from "@/lib/shipping";
+import { calculateOrderTotal } from "@/lib/order-totals";
 import { PaystackIcon, TruckIcon } from "@/components/Icons";
+import { useRouter } from "next/navigation";
 
 export default function CheckoutPage() {
-  const { cart, cartSubtotal, user, country, currency, showToast } = useStore();
+  const router = useRouter();
+  const { cart, cartSubtotal, user, authReady, country, currency, showToast } = useStore();
 
   const [formData, setFormData] = useState({
     fullName: user?.name || "",
@@ -48,11 +51,19 @@ export default function CheckoutPage() {
     });
   }, [formData.country, formData.state, formData.city, cartSubtotal]);
 
-  const shippingFee = shippingCalculation.fee;
+  const shippingFee = Math.max(3500, shippingCalculation.fee);
   const duties = 0;
-  const taxes = Math.round(cartSubtotal * 0.05); // 5% VAT tax
+  const taxes = calculateOrderTotal(cartSubtotal, shippingFee).vatFee;
   const subtotalAfterDiscount = Math.max(0, cartSubtotal - discountAmount);
   const grandTotal = subtotalAfterDiscount + shippingFee + duties + taxes;
+
+  useEffect(() => {
+    if (authReady && !user) router.replace(`/login?returnTo=${encodeURIComponent("/checkout")}`);
+  }, [authReady, router, user]);
+
+  if (!authReady || !user) {
+    return <div className="wrap" style={{ padding: "100px 0", textAlign: "center" }}><h2>Sign in to continue to checkout.</h2><p style={{ color: "var(--muted)", marginTop: "12px" }}>Redirecting you to secure sign in...</p></div>;
+  }
 
   if (cart.length === 0) {
     return (
@@ -461,7 +472,7 @@ export default function CheckoutPage() {
             </div>
 
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem" }}>
-              <span style={{ color: "#475569" }}>Taxes</span>
+              <span style={{ color: "#475569" }}>VAT (7% of delivery)</span>
               <span style={{ fontWeight: 800 }}>{formatMoney(taxes, currency)}</span>
             </div>
 

@@ -7,7 +7,7 @@ import { useStore } from "@/context/StoreContext";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { setUser, showToast } = useStore();
+  const { showToast } = useStore();
 
   const [method, setMethod] = useState<"password" | "otp">("password");
   const [name, setName] = useState("");
@@ -41,9 +41,19 @@ export default function RegisterPage() {
         throw new Error(json.error || "Failed to create account");
       }
 
-      setUser(json.data.user);
-      showToast(`Welcome to BGV, ${json.data.user.name}!`);
-      router.push("/account");
+      const otpRes = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const otpJson = await otpRes.json();
+      if (!otpRes.ok || !otpJson.success) {
+        throw new Error(otpJson.error || "Account created, but we could not send the verification code.");
+      }
+
+      setOtpSent(true);
+      showToast("Account created. Verify your email to continue.");
+      if (otpJson.devCode) setOtpCode(otpJson.devCode);
     } catch (err: any) {
       setError(err.message || "An error occurred during registration.");
     } finally {
@@ -95,13 +105,12 @@ export default function RegisterPage() {
       });
 
       const json = await res.json();
-      if (!json.success || !json.data?.user) {
+      if (!json.success) {
         throw new Error(json.error || "Verification failed");
       }
 
-      setUser(json.data.user);
-      showToast(`Welcome to BGV, ${json.data.user.name}!`);
-      router.push("/account");
+      showToast("Email verified. Your account is awaiting admin approval.");
+      router.push("/login");
     } catch (err: any) {
       setError(err.message || "Invalid code. Please try again.");
     } finally {
@@ -136,22 +145,6 @@ export default function RegisterPage() {
           >
             Create with Password
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setMethod("otp");
-              setError("");
-            }}
-            style={{
-              padding: "10px 16px",
-              fontWeight: 700,
-              fontSize: "0.875rem",
-              borderBottom: method === "otp" ? "2px solid var(--plum)" : "none",
-              color: method === "otp" ? "var(--plum)" : "var(--muted)",
-            }}
-          >
-            Instant Email Code (OTP)
-          </button>
         </div>
 
         {error && (
@@ -170,7 +163,7 @@ export default function RegisterPage() {
           </div>
         )}
 
-        {method === "password" ? (
+        {!otpSent ? (
           <form onSubmit={handlePasswordSubmit}>
             <label className="field">
               <span>Full Name</span>
@@ -210,34 +203,6 @@ export default function RegisterPage() {
 
             <button className="button coral full-width" type="submit" disabled={loading} style={{ marginTop: "12px" }}>
               {loading ? "Creating Account..." : "Create Account"}
-            </button>
-          </form>
-        ) : !otpSent ? (
-          <form onSubmit={handleSendOtp}>
-            <label className="field">
-              <span>Full Name</span>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Amara Okafor"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </label>
-
-            <label className="field">
-              <span>Email Address</span>
-              <input
-                type="email"
-                required
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </label>
-
-            <button className="button coral full-width" type="submit" disabled={loading} style={{ marginTop: "12px" }}>
-              {loading ? "Sending Code..." : "Send 6-Digit Email Code"}
             </button>
           </form>
         ) : (

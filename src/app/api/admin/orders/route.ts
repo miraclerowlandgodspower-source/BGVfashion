@@ -15,6 +15,8 @@ export async function GET(req: Request) {
     const search = searchParams.get("search")?.toLowerCase().trim();
     const status = searchParams.get("status");
     const orderNumber = searchParams.get("orderNumber");
+    const paymentStatus = searchParams.get("paymentStatus");
+    const orderDate = searchParams.get("orderDate");
 
     const db = getDb();
     let orderList: any[] = [];
@@ -62,6 +64,9 @@ export async function GET(req: Request) {
       orderList = orderList.filter((o) => o.status === status);
     }
 
+    if (paymentStatus && paymentStatus !== "all") orderList = orderList.filter((o) => o.paymentStatus === paymentStatus);
+    if (orderDate) orderList = orderList.filter((o) => o.createdAt?.toString().slice(0, 10) === orderDate);
+
     // Filter by search
     if (search) {
       orderList = orderList.filter(
@@ -70,7 +75,9 @@ export async function GET(req: Request) {
           o.customerName?.toLowerCase().includes(search) ||
           o.customerEmail?.toLowerCase().includes(search) ||
           o.customerPhone?.toLowerCase().includes(search) ||
-          o.trackingNumber?.toLowerCase().includes(search)
+          o.trackingNumber?.toLowerCase().includes(search) ||
+          o.paystackReference?.toLowerCase().includes(search) ||
+          o.paystackTransactionId?.toLowerCase().includes(search)
       );
     }
 

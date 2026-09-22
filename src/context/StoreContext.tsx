@@ -10,6 +10,7 @@ interface ToastState {
 
 interface StoreContextType {
   user: User | null;
+  authReady: boolean;
   setUser: (user: User | null) => void;
   logout: () => Promise<void>;
   cart: CartItem[];
@@ -40,6 +41,7 @@ const STORAGE_PREFS_KEY = "bgv_prefs_v1";
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [country, setCountry] = useState<string>("Nigeria");
@@ -58,6 +60,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         console.warn("Auth check notice:", err);
+      } finally {
+        setAuthReady(true);
       }
     }
     checkAuth();
@@ -209,6 +213,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     <StoreContext.Provider
       value={{
         user,
+        authReady,
         setUser,
         logout,
         cart,

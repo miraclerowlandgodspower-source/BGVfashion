@@ -12,7 +12,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const { isWishlisted, toggleWishlist, currency } = useStore();
+  const { isWishlisted, toggleWishlist, addToCart, currency } = useStore();
   const wished = isWishlisted(product.id);
 
   return (
@@ -43,7 +43,10 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
 
         <div className="product-info">
-          <h3 className="product-name">{product.name}</h3>
+          <div className="product-heading-row">
+            <h3 className="product-name">{product.name}</h3>
+            {product.inStock !== false && <span className="stock-badge">In stock</span>}
+          </div>
           <div className="swatches" aria-label="Available colours">
             {product.colors.map((color) => (
               <span
@@ -54,6 +57,13 @@ export function ProductCard({ product }: ProductCardProps) {
             ))}
           </div>
           <p className="price">{formatMoney(product.price, currency)}</p>
+          <button type="button" className="quick-add" onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (product.sizes[0]) addToCart(product, product.sizes[0]);
+          }} disabled={!product.inStock || product.sizes.length === 0}>
+            {product.inStock === false ? "Sold out" : "Quick add"}<span aria-hidden="true">+</span>
+          </button>
         </div>
       </Link>
     </article>

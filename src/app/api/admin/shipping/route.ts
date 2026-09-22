@@ -42,6 +42,8 @@ export async function GET() {
             trackingStatus: ord.trackingStatus || "Preparing in Atelier",
             shippingFee: ord.shippingFee,
             estimatedDelivery: ord.estimatedDelivery || "2-4 Business Days",
+            lastKnownLatitude: ord.lastKnownLatitude,
+            lastKnownLongitude: ord.lastKnownLongitude,
             trackingEvents: eventRows,
             createdAt: ord.createdAt ? ord.createdAt.toISOString() : new Date().toISOString(),
           });
@@ -66,6 +68,8 @@ export async function GET() {
         trackingStatus: ord.trackingStatus || "Preparing in Atelier",
         shippingFee: ord.shippingFee,
         estimatedDelivery: ord.estimatedDelivery || "2-4 Business Days",
+        lastKnownLatitude: ord.lastKnownLatitude,
+        lastKnownLongitude: ord.lastKnownLongitude,
         createdAt: ord.createdAt,
       }));
     }
@@ -98,6 +102,10 @@ export async function PATCH(req: Request) {
       trackingStatus,
       estimatedDelivery,
       status,
+      latitude,
+      longitude,
+      eventMessage,
+      eventLocation,
     } = await req.json();
 
     if (!orderNumber) {
@@ -114,6 +122,8 @@ export async function PATCH(req: Request) {
     if (trackingStatus !== undefined) updates.trackingStatus = trackingStatus;
     if (estimatedDelivery !== undefined) updates.estimatedDelivery = estimatedDelivery;
     if (status !== undefined) updates.status = status;
+    if (latitude !== undefined) updates.lastKnownLatitude = latitude || null;
+    if (longitude !== undefined) updates.lastKnownLongitude = longitude || null;
 
     const db = getDb();
     if (db) {
@@ -153,7 +163,8 @@ export async function PATCH(req: Request) {
           await db.insert(schema.shippingEvents).values({
             orderId: ord.id,
             status: normalizedStatus,
-            message: trackingStatus || `Shipment status updated to ${normalizedStatus}`,
+            message: eventMessage || trackingStatus || `Shipment status updated to ${normalizedStatus}`,
+            location: eventLocation || null,
           });
         }
       } catch (err) {

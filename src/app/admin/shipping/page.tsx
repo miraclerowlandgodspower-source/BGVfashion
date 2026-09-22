@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { DeliveryMap } from "@/components/DeliveryMap";
 
 const COURIER_OPTIONS = [
   "GIG Logistics",
@@ -32,6 +33,10 @@ export default function AdminShippingPage() {
   const [trackingUrl, setTrackingUrl] = useState("");
   const [estimatedDelivery, setEstimatedDelivery] = useState("");
   const [shipmentStatus, setShipmentStatus] = useState("preparing");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const [eventMessage, setEventMessage] = useState("");
+  const [eventLocation, setEventLocation] = useState("");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
 
@@ -69,6 +74,10 @@ export default function AdminShippingPage() {
         ? "out_for_delivery"
         : "preparing"
     );
+    setLatitude(ship.lastKnownLatitude || "");
+    setLongitude(ship.lastKnownLongitude || "");
+    setEventMessage("");
+    setEventLocation("");
   };
 
   const handleSaveShipment = async (e: React.FormEvent) => {
@@ -94,6 +103,10 @@ export default function AdminShippingPage() {
               : shipmentStatus === "out_for_delivery"
               ? "out_for_delivery"
               : "processing",
+              latitude: latitude.trim() || null,
+              longitude: longitude.trim() || null,
+              eventMessage: eventMessage.trim() || undefined,
+              eventLocation: eventLocation.trim() || undefined,
           trackingStatus:
             shipmentStatus === "delivered"
               ? "Delivered to Client"
@@ -529,6 +542,11 @@ export default function AdminShippingPage() {
                 </div>
               )}
 
+              <div style={{ marginBottom: "20px" }}>
+                <strong style={{ display: "block", fontSize: "0.82rem", marginBottom: "8px" }}>Last known delivery location</strong>
+                <DeliveryMap latitude={latitude} longitude={longitude} />
+              </div>
+
               <div style={{ marginBottom: "16px" }}>
                 <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 700, marginBottom: "6px" }}>
                   Courier Partner *
@@ -599,6 +617,15 @@ export default function AdminShippingPage() {
                     style={{ width: "100%", padding: "10px 12px", border: "1px solid #d1d5db", borderRadius: "6px" }}
                   />
                 </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+                <label style={{ fontSize: "0.82rem", fontWeight: 700 }}>Latitude<input type="number" step="any" value={latitude} onChange={(e) => setLatitude(e.target.value)} placeholder="Only when courier provides it" style={{ width: "100%", marginTop: 6, padding: "10px 12px", border: "1px solid #d1d5db" }} /></label>
+                <label style={{ fontSize: "0.82rem", fontWeight: 700 }}>Longitude<input type="number" step="any" value={longitude} onChange={(e) => setLongitude(e.target.value)} placeholder="Only when courier provides it" style={{ width: "100%", marginTop: 6, padding: "10px 12px", border: "1px solid #d1d5db" }} /></label>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px" }}>
+                <label style={{ fontSize: "0.82rem", fontWeight: 700 }}>Event message<input value={eventMessage} onChange={(e) => setEventMessage(e.target.value)} placeholder="e.g. Courier received parcel" style={{ width: "100%", marginTop: 6, padding: "10px 12px", border: "1px solid #d1d5db" }} /></label>
+                <label style={{ fontSize: "0.82rem", fontWeight: 700 }}>Event location<input value={eventLocation} onChange={(e) => setEventLocation(e.target.value)} placeholder="e.g. Ikeja hub" style={{ width: "100%", marginTop: 6, padding: "10px 12px", border: "1px solid #d1d5db" }} /></label>
               </div>
 
               {/* Carrier API Extensibility Notice */}
