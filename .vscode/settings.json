@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^node <<'NODE'\nconst fs = require\\(\"fs\"\\);\nconst \\{ Pool \\} = require\\(\"pg\"\\);\nconst line = fs\\.readFileSync\\(\"\\.env\\.local\", \"utf8\"\\)\\.split\\(/\\\\r\\?\\\\n/\\)\\.find\\(\\(value\\) => value\\.startsWith\\(\"DATABASE_URL=\"\\)\\);\nconst url = line\\.slice\\(\"DATABASE_URL=\"\\.length\\)\\.replace\\(/\\^\"\\|\"\\$/g, \"\"\\);\nconst pool = new Pool\\(\\{ connectionString: url, ssl: \\{ rejectUnauthorized: false \\} \\}\\);\nconst statements = \\[\n  `ALTER TABLE users ADD COLUMN IF NOT EXISTS account_status text DEFAULT 'EMAIL_UNVERIFIED' NOT NULL`,\n  `ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at timestamp`,\n  `ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at timestamp`,\n  `ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts integer DEFAULT 0 NOT NULL`,\n  `ALTER TABLE users ADD COLUMN IF NOT EXISTS lock_until timestamp`,\n  `CREATE INDEX IF NOT EXISTS users_account_status_idx ON users \\(account_status\\)`,\n\\];\n\\(async \\(\\) => \\{\n  try \\{\n    for \\(const statement of statements\\) await pool\\.query\\(statement\\);\n    console\\.log\\(\"Applied missing users schema columns and index\\.\"\\);\n  \\} finally \\{\n    await pool\\.end\\(\\);\n  \\}\n\\}\\)\\(\\)\\.catch\\(\\(error\\) => \\{\n  console\\.error\\(error\\.message\\);\n  process\\.exit\\(1\\);\n\\}\\);\nNODE\nnpm run admin:create$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
