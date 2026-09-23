@@ -3,6 +3,7 @@ import { getDb, inMemoryStore } from "@/lib/db";
 import * as schema from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { createSessionToken, COOKIE_NAME, getCookieOptions } from "@/lib/auth";
+import { sendWelcomeEmail } from "@/lib/bgv-email";
 
 export async function POST(req: Request) {
   try {
@@ -95,6 +96,12 @@ export async function POST(req: Request) {
       const existing = inMemoryStore.users.get(normalizedEmail)!;
       if (purpose !== "login") existing.accountStatus = updatedStatus;
       existing.name = existing.name || (name?.trim() || normalizedEmail.split("@")[0]);
+    }
+
+    if (purpose !== "login") {
+      sendWelcomeEmail(normalizedEmail, user.name || name).catch((err) => {
+        console.warn("Welcome email delivery notice:", err);
+      });
     }
 
     const response = NextResponse.json({
