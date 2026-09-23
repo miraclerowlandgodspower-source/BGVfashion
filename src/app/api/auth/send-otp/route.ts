@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb, inMemoryStore } from "@/lib/db";
 import * as schema from "@/db/schema";
 import { isValidEmail, normalizeEmail } from "@/lib/email";
+import { sendOtpEmail } from "@/lib/bgv-email";
 
 export async function POST(req: Request) {
   try {
@@ -29,32 +30,13 @@ export async function POST(req: Request) {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = now + 10 * 60 * 1000;
 
-    const emailApiKey = process.env.EMAIL_API_KEY;
-    const emailFrom = process.env.EMAIL_FROM || "admin@bgvfashion.shop";
-    if (emailApiKey && emailFrom) {
-      const emailResponse = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${emailApiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          from: process.env.EMAIL_FROM || "admin@bgvfashion.shop",
-          to: [normalizedEmail],
-          subject: "Your BGV Fashion verification code",
-          text: `Your BGV Fashion verification code is ${code}. It expires in 10 minutes.`,
-          html: `<p>Your BGV Fashion verification code is:</p><p style="font-size:28px;font-weight:bold;letter-spacing:6px">${code}</p><p>This code expires in 10 minutes.</p>`,
-        }),
-      });
-      if (!emailResponse.ok) {
-        const providerError = await emailResponse.json().catch(() => null) as { name?: string; message?: string } | null;
-        const senderNotVerified = providerError?.name === "validation_error" || /domain|sender|from/i.test(providerError?.message || "");
-        console.error("OTP email delivery failed:", {
-          status: emailResponse.status,
-          providerError: providerError?.name || "unknown",
-        });
+    if (process.env.EMAIL_API_KEY) {
+      const delivered = await sendOtpEmail(normalizedEmail, code);
+      if (!delivered) {
+        const emailFrom = process.env.EMAIL_FROM || "admin@bgvfashion.shop";
         return NextResponse.json({
           success: false,
-          error: senderNotVerified
-            ? `Email delivery is not configured for ${emailFrom}. Verify the sender domain in Resend, then try again.`
-            : "We could not deliver your verification email. Please try again shortly.",
+          error: `We could not deliver your verification email from ${emailFrom}. Check Resend domain verification and try again.`,
         }, { status: 502 });
       }
     } else if (process.env.NODE_ENV === "production") {
