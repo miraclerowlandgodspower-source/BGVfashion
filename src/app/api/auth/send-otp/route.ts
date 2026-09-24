@@ -33,10 +33,9 @@ export async function POST(req: Request) {
     if (process.env.EMAIL_API_KEY) {
       const delivered = await sendOtpEmail(normalizedEmail, code);
       if (!delivered) {
-        const emailFrom = process.env.EMAIL_FROM || "admin@bgvfashion.shop";
         return NextResponse.json({
           success: false,
-          error: `We could not deliver your verification email from ${emailFrom}. Check Resend domain verification and try again.`,
+          error: "We could not deliver your verification email from noreply@bgvfashion.shop. Please try again or contact support@bgvfashion.shop.",
         }, { status: 502 });
       }
     } else if (process.env.NODE_ENV === "production") {
