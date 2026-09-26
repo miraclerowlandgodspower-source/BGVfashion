@@ -1363,3 +1363,103 @@ details p {
   .mobile-menu-row b { color: #8d8588; font-size: 1.65rem; font-weight: 300; }
   @keyframes bgv-menu-in { from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: translateX(0); } }
 }
+
+
+/* ==============================================================================
+   BGV MINIMAL EDIT — fashion-first minimalism
+   ============================================================================== */
+:root {
+  --minimal-black: #0b0b0b;
+  --minimal-paper: #fbfbf9;
+  --minimal-grey: #747474;
+  --minimal-rule: #d8d8d4;
+}
+
+body { background: var(--minimal-paper); color: var(--minimal-black); }
+.header-main { min-height: 76px; }
+.wordmark { color: #0b0b0b; font-size: 2.65rem; }
+.search-form { background: transparent; border-bottom: 1px solid #bdbdb8; }
+.search-form:focus-within { border-color: #0b0b0b; background: transparent; }
+.main-nav { border-color: #d8d8d4; background: var(--minimal-paper); }
+.nav-inner a { font-size: .76rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.region-button:hover { background: transparent; text-decoration: underline; text-underline-offset: 4px; }
+
+.home-page { background: var(--minimal-paper); }
+.home-page .luxury-hero { min-height: min(82vh, 880px); }
+.home-page .hero-shade { background: linear-gradient(90deg, rgba(0,0,0,.55), rgba(0,0,0,.04) 72%); }
+.home-page .hero-orbit { display: none; }
+.home-page .luxury-hero h1 { font-weight: 500; letter-spacing: -.065em; text-transform: none; }
+.home-page .luxury-hero h1 em { font-family: Georgia, "Times New Roman", serif; font-weight: 400; }
+.home-page .gold-eyebrow { color: #fff; }
+.home-page .gold-button,
+.home-page .glass-button {
+  border: 1px solid #fff; border-radius: 0; background: #fff; color: #0b0b0b;
+  box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+.home-page .glass-button { background: transparent; color: #fff; }
+.home-page .home-section { padding-block: 88px; }
+.home-page .section-heading h2 { font-weight: 500; letter-spacing: -.05em; text-transform: none; }
+.home-page .gold-link { color: #111; border-color: #111; font-weight: 500; }
+.home-page .trend-section { background: var(--minimal-paper); color: #111; padding-block: 88px; }
+.home-page .trend-section .dark-heading,
+.home-page .trend-section .dark-heading h2 { color: #111; }
+.home-page .trend-section .dark-heading .eyebrow { color: #666; }
+.home-page .trend-card { background: #ececea; }
+.home-page .trend-card span {
+  background: rgba(255,255,255,.92); color: #111; border: 0; bottom: 0; left: 0; right: 0; padding: 14px 16px;
+}
+.home-page .trend-card b,
+.home-page .luxury-category b { color: #111; }
+.home-page .luxury-category { background: transparent; }
+.home-page .exclusive-drop h2,
+.home-page .lookbook-intro h2 { font-weight: 500; text-transform: none; }
+.home-page .exclusive-drop h2 em,
+.home-page .lookbook-intro h2 em { font-family: Georgia, "Times New Roman", serif; font-weight: 400; }
+.home-page .service-section { background: #f1f1ed; }
+.home-page .service-item { border-color: #aaa; }
+.home-page .service-item > span { color: #666; }
+.home-page .newsletter-section h2 { font-weight: 500; text-transform: none; }
+.home-page .newsletter-form button { color: #111; }
+
+/* Minimal account experience */
+.minimal-auth-page {
+  width: min(calc(100% - 80px), 1280px); min-height: calc(100vh - 170px); margin: 0 auto;
+  display: grid; grid-template-columns: minmax(0, .9fr) minmax(380px, 1.1fr); border-inline: 1px solid var(--minimal-rule);
+}
+.minimal-auth-panel { padding: clamp(56px, 8vw, 120px); display: flex; flex-direction: column; justify-content: center; background: #fff; }
+.minimal-kicker { margin-bottom: 24px; font-size: .68rem; font-weight: 700; letter-spacing: .18em; }
+.minimal-auth-panel h1 { max-width: 520px; font-size: clamp(2.6rem, 5vw, 5rem); font-weight: 500; letter-spacing: -.07em; }
+.minimal-auth-copy { max-width: 500px; margin: 24px 0 34px; color: var(--minimal-grey); font-size: .94rem; }
+.google-auth { width: min(100%, 420px); }
+.google-button-slot { min-height: 44px; width: 100%; }
+.google-button-slot > div, .google-button-slot iframe { max-width: 100% !important; }
+.google-loading, .google-config-note { padding: 14px 16px; border: 1px solid var(--minimal-rule); color: #666; font-size: .82rem; }
+.auth-error { margin-top: 12px; color: #9f1d1d; font-size: .82rem; }
+.minimal-privacy { margin-top: 20px; color: #858585; font-size: .72rem; line-height: 1.6; }
+.minimal-auth-footer { display: flex; gap: 10px; margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--minimal-rule); font-size: .82rem; }
+.minimal-auth-footer a { font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+.minimal-auth-editorial { padding: clamp(42px, 7vw, 96px); background: #0b0b0b; color: #fff; display: flex; flex-direction: column; justify-content: space-between; }
+.minimal-auth-editorial > p { font-size: .65rem; letter-spacing: .18em; }
+.minimal-auth-editorial h2 { margin: auto 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(3rem, 6vw, 6.4rem); font-weight: 400; letter-spacing: -.06em; }
+.minimal-auth-editorial > div { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 30px; padding-top: 24px; border-top: 1px solid #444; font-size: .7rem; letter-spacing: .08em; }
+.minimal-social-auth { margin: 4px 0 24px; }
+.auth-divider { width: min(100%, 420px); display: flex; align-items: center; gap: 12px; margin: 22px 0; color: #8a8a8a; font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; }
+.auth-divider::before, .auth-divider::after { content: ""; height: 1px; background: #ddd; flex: 1; }
+
+@media (max-width: 767px) {
+  .wrap { width: min(calc(100% - 32px), var(--max)); }
+  .header-main { min-height: 68px; }
+  .wordmark { font-size: 2.3rem; }
+  .mobile-shop-menu { background: var(--minimal-paper); color: #111; }
+  .mobile-menu-logo, .mobile-menu-row.featured, .mobile-department-tabs button.active { color: #111; }
+  .mobile-department-tabs button.active { border-bottom-color: #111; }
+  .mobile-feature-links a, .mobile-feature-links a:nth-child(2), .mobile-feature-links a:nth-child(3) { background: transparent; color: #111; border-color: #d8d8d4; }
+  .mobile-menu-search { background: #efefeb; }
+  .minimal-auth-page { width: 100%; min-height: auto; display: block; border: 0; }
+  .minimal-auth-panel { padding: 58px 22px 72px; }
+  .minimal-auth-panel h1 { font-size: clamp(2.8rem, 14vw, 4.6rem); }
+  .minimal-auth-editorial { min-height: 520px; padding: 40px 22px; }
+  .minimal-auth-editorial h2 { font-size: clamp(3rem, 15vw, 5.2rem); }
+  .minimal-auth-editorial > div { grid-template-columns: 1fr; }
+  .home-page .home-section, .home-page .trend-section { padding-block: 64px; }
+}
