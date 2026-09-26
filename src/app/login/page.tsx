@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/context/StoreContext";
 import { isValidEmail, normalizeEmail } from "@/lib/email";
+import { GoogleSignIn } from "@/components/GoogleSignIn";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -126,7 +127,12 @@ export default function LoginPage() {
           Sign in to access your order history and manage your wardrobe.
         </p>
 
-        {/* Tab switcher: Password vs Email Code */}
+        <div className="minimal-social-auth">
+          <GoogleSignIn mode="signin" returnTo={returnTo} />
+          <div className="auth-divider"><span>or use your existing BGV account</span></div>
+        </div>
+
+        {/* Existing BGV account methods */}
         <div style={{ display: "flex", borderBottom: "1px solid var(--line)", marginBottom: "24px" }}>
           <button
             type="button"
