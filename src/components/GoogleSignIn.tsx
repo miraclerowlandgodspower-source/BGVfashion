@@ -49,25 +49,6 @@ export function GoogleSignIn({ mode = "signin", returnTo = "/account" }: GoogleS
     }
   }, [mode, returnTo, router, setUser, showToast]);
 
-  const lockGoogleButtonToSlot = useCallback(() => {
-    const slot = buttonRef.current;
-    if (!slot) return;
-
-    const width = Math.min(Math.floor(slot.getBoundingClientRect().width), GOOGLE_BUTTON_MAX_WIDTH);
-    if (!width) return;
-
-    slot.style.width = "100%";
-    slot.style.maxWidth = `${GOOGLE_BUTTON_MAX_WIDTH}px`;
-    slot.style.overflow = "hidden";
-
-    slot.querySelectorAll<HTMLElement>("div, iframe").forEach((node) => {
-      node.style.setProperty("width", "100%", "important");
-      node.style.setProperty("max-width", `${width}px`, "important");
-      node.style.setProperty("min-width", "0", "important");
-      node.style.setProperty("box-sizing", "border-box", "important");
-    });
-  }, []);
-
   const renderButton = useCallback(() => {
     const google = (window as any).google;
     const slot = buttonRef.current;
@@ -77,8 +58,8 @@ export function GoogleSignIn({ mode = "signin", returnTo = "/account" }: GoogleS
     if (!availableWidth) return;
 
     const width = Math.min(availableWidth, GOOGLE_BUTTON_MAX_WIDTH);
+
     if (lastRenderedWidth.current === width && slot.childElementCount > 0) {
-      lockGoogleButtonToSlot();
       return;
     }
 
@@ -92,7 +73,7 @@ export function GoogleSignIn({ mode = "signin", returnTo = "/account" }: GoogleS
       use_fedcm_for_button: false,
     });
 
-    slot.innerHTML = "";
+    slot.replaceChildren();
     google.accounts.id.renderButton(slot, {
       type: "standard",
       theme: "outline",
@@ -104,46 +85,37 @@ export function GoogleSignIn({ mode = "signin", returnTo = "/account" }: GoogleS
     });
 
     lastRenderedWidth.current = width;
-    lockGoogleButtonToSlot();
     setReady(true);
-  }, [clientId, handleCredential, lockGoogleButtonToSlot, mode]);
+  }, [clientId, handleCredential, mode]);
 
   useEffect(() => {
     renderButton();
 
     const slot = buttonRef.current;
-    if (!slot) return;
+    if (!slot || typeof ResizeObserver === "undefined") return;
 
     let frame = 0;
-    const keepLocked = () => {
+    const observer = new ResizeObserver(() => {
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
-        lockGoogleButtonToSlot();
-        renderButton();
+        const width = Math.min(
+          Math.floor(slot.getBoundingClientRect().width),
+          GOOGLE_BUTTON_MAX_WIDTH
+        );
+
+        if (width && width !== lastRenderedWidth.current) {
+          renderButton();
+        }
       });
-    };
-
-    const resizeObserver = typeof ResizeObserver !== "undefined"
-      ? new ResizeObserver(keepLocked)
-      : null;
-    const mutationObserver = new MutationObserver(keepLocked);
-    const timers = [100, 350, 1000, 2500, 5000].map((delay) =>
-      window.setTimeout(keepLocked, delay)
-    );
-
-    resizeObserver?.observe(slot);
-    mutationObserver.observe(slot, {
-      childList: true,
-      subtree: true,
     });
+
+    observer.observe(slot);
 
     return () => {
       window.cancelAnimationFrame(frame);
-      timers.forEach((timer) => window.clearTimeout(timer));
-      resizeObserver?.disconnect();
-      mutationObserver.disconnect();
+      observer.disconnect();
     };
-  }, [lockGoogleButtonToSlot, renderButton]);
+  }, [renderButton]);
 
   if (!clientId) {
     return <div className="google-config-note">Google sign-in is being configured.</div>;
@@ -151,7 +123,11 @@ export function GoogleSignIn({ mode = "signin", returnTo = "/account" }: GoogleS
 
   return (
     <div className="google-auth">
-      <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onLoad={renderButton} />
+      <Script
+        src="https://accounts.google.com/gsi/client"
+        strategy="afterInteractive"
+        onLoad={renderButton}
+      />
       <div
         ref={buttonRef}
         className="google-button-slot"
