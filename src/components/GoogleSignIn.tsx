@@ -49,6 +49,25 @@ export function GoogleSignIn({ mode = "signin", returnTo = "/account" }: GoogleS
     }
   }, [mode, returnTo, router, setUser, showToast]);
 
+  const lockGoogleButtonToSlot = useCallback(() => {
+    const slot = buttonRef.current;
+    if (!slot) return;
+
+    const width = Math.min(Math.floor(slot.getBoundingClientRect().width), GOOGLE_BUTTON_MAX_WIDTH);
+    if (!width) return;
+
+    slot.style.width = "100%";
+    slot.style.maxWidth = `${GOOGLE_BUTTON_MAX_WIDTH}px`;
+    slot.style.overflow = "hidden";
+
+    slot.querySelectorAll<HTMLElement>("div, iframe").forEach((node) => {
+      node.style.setProperty("width", "100%", "important");
+      node.style.setProperty("max-width", `${width}px`, "important");
+      node.style.setProperty("min-width", "0", "important");
+      node.style.setProperty("box-sizing", "border-box", "important");
+    });
+  }, []);
+
   const renderButton = useCallback(() => {
     const google = (window as any).google;
     const slot = buttonRef.current;
@@ -58,14 +77,19 @@ export function GoogleSignIn({ mode = "signin", returnTo = "/account" }: GoogleS
     if (!availableWidth) return;
 
     const width = Math.min(availableWidth, GOOGLE_BUTTON_MAX_WIDTH);
-    if (ready && lastRenderedWidth.current === width) return;
+    if (lastRenderedWidth.current === width && slot.childElementCount > 0) {
+      lockGoogleButtonToSlot();
+      return;
+    }
 
     google.accounts.id.initialize({
       client_id: clientId,
       callback: handleCredential,
       context: mode,
       ux_mode: "popup",
-      use_fedcm_for_button: true,
+      auto_select: false,
+      cancel_on_tap_outside: true,
+      use_fedcm_for_button: false,
     });
 
     slot.innerHTML = "";
@@ -80,46 +104,56 @@ export function GoogleSignIn({ mode = "signin", returnTo = "/account" }: GoogleS
     });
 
     lastRenderedWidth.current = width;
+    lockGoogleButtonToSlot();
     setReady(true);
-  }, [clientId, handleCredential, mode, ready]);
+  }, [clientId, handleCredential, lockGoogleButtonToSlot, mode]);
 
   useEffect(() => {
     renderButton();
 
     const slot = buttonRef.current;
-    if (!slot || typeof ResizeObserver === "undefined") return;
+    if (!slot) return;
 
     let frame = 0;
-    const observer = new ResizeObserver(() => {
+    const keepLocked = () => {
       window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(renderButton);
+      frame = window.requestAnimationFrame(() => {
+        lockGoogleButtonToSlot();
+        renderButton();
+      });
+    };
+
+    const resizeObserver = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(keepLocked)
+      : null;
+    const mutationObserver = new MutationObserver(keepLocked);
+
+    resizeObserver?.observe(slot);
+    mutationObserver.observe(slot, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["style", "width"],
     });
 
-    observer.observe(slot);
     return () => {
       window.cancelAnimationFrame(frame);
-      observer.disconnect();
+      resizeObserver?.disconnect();
+      mutationObserver.disconnect();
     };
-  }, [renderButton]);
+  }, [lockGoogleButtonToSlot, renderButton]);
 
   if (!clientId) {
     return <div className="google-config-note">Google sign-in is being configured.</div>;
   }
 
   return (
-    <div className="google-auth" style={{ width: "100%", maxWidth: GOOGLE_BUTTON_MAX_WIDTH }}>
+    <div className="google-auth">
       <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" onLoad={renderButton} />
       <div
         ref={buttonRef}
         className="google-button-slot"
         aria-label={mode === "signup" ? "Sign up with Google" : "Continue with Google"}
-        style={{
-          width: "100%",
-          maxWidth: GOOGLE_BUTTON_MAX_WIDTH,
-          minWidth: 0,
-          minHeight: 44,
-          overflow: "hidden",
-        }}
       />
       {!ready && <div className="google-loading">Loading Google sign-in…</div>}
       {error && <p className="auth-error" role="alert">{error}</p>}
