@@ -127,17 +127,19 @@ export function GoogleSignIn({ mode = "signin", returnTo = "/account" }: GoogleS
       ? new ResizeObserver(keepLocked)
       : null;
     const mutationObserver = new MutationObserver(keepLocked);
+    const timers = [100, 350, 1000, 2500, 5000].map((delay) =>
+      window.setTimeout(keepLocked, delay)
+    );
 
     resizeObserver?.observe(slot);
     mutationObserver.observe(slot, {
       childList: true,
       subtree: true,
-      attributes: true,
-      attributeFilter: ["style", "width"],
     });
 
     return () => {
       window.cancelAnimationFrame(frame);
+      timers.forEach((timer) => window.clearTimeout(timer));
       resizeObserver?.disconnect();
       mutationObserver.disconnect();
     };
