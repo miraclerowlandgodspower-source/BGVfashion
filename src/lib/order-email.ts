@@ -87,7 +87,7 @@ export async function sendOrderReceiptEmails(order: Order, items: OrderItem[], t
     body: JSON.stringify({
       from: ORDER_FROM,
       to: [order.customerEmail],
-      cc: [adminEmail],
+      bcc: [adminEmail],
       reply_to: SUPPORT_EMAIL,
       subject: `BGV order confirmed · ${order.orderNumber}`,
       html,
