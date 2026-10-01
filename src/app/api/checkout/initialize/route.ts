@@ -9,7 +9,11 @@ import { calculateOrderTotal } from "@/lib/order-totals";
 
 export async function POST(req: Request) {
   try {
-    const { items, shippingAddress, currency: displayCurrency = "NGN" } = await req.json();\n    // BGV is a Nigeria-based Paystack merchant. Paystack currently supports NGN\n    // (and USD only when separately enabled) for Nigerian businesses. Charge in\n    // NGN so international card issuers can perform the customer-side conversion.\n    const paymentCurrency = "NGN";
+    const { items, shippingAddress, currency: displayCurrency = "NGN" } = await req.json();
+    // BGV is a Nigeria-based Paystack merchant. Paystack currently supports NGN
+    // (and USD only when separately enabled) for Nigerian businesses. Charge in
+    // NGN so international card issuers can perform the customer-side conversion.
+    const paymentCurrency = "NGN";
     const user = await getSessionUser();
 
     if (!user) {
