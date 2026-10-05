@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";\nimport { revalidatePath } from "next/cache";
+import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getDb, inMemoryStore, getProducts } from "@/lib/db";
 import * as schema from "@/db/schema";
 import { checkAdminApiAccess } from "@/lib/auth";
