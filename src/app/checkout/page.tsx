@@ -522,9 +522,9 @@ export default function CheckoutPage() {
           </div>
 
           <button
-            type="submit"
+            type={transferInstructions && paymentMethod !== "PAYSTACK" ? "button" : "submit"}
             className="button full-width"
-            disabled={loading}
+            disabled={loading || Boolean(transferInstructions && paymentMethod !== "PAYSTACK")}
             style={{
               marginTop: "24px",
               background: "#000",
