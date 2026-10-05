@@ -108,7 +108,7 @@ export default function AdminDashboardPage() {
 
         <div style={{ display: "flex", gap: "10px" }}>
           <Link
-            href="/admin/products"
+            href="/restrictedportaladminonly/products"
             style={{
               background: "var(--plum, #4a154b)",
               color: "#fff",
@@ -122,7 +122,7 @@ export default function AdminDashboardPage() {
             + Add New Piece
           </Link>
           <Link
-            href="/admin/orders"
+            href="/restrictedportaladminonly/orders"
             style={{
               background: "#ffffff",
               border: "1px solid #d1d5db",
@@ -210,7 +210,7 @@ export default function AdminDashboardPage() {
                   </strong>
                 </div>
                 <Link
-                  href="/admin/products"
+                  href="/restrictedportaladminonly/products"
                   style={{ color: "#ea580c", fontSize: "0.82rem", fontWeight: 700, textDecoration: "underline" }}
                 >
                   Manage All Inventory →
@@ -255,7 +255,7 @@ export default function AdminDashboardPage() {
                         </td>
                         <td style={{ padding: "12px 20px", textAlign: "right" }}>
                           <Link
-                            href="/admin/products"
+                            href="/restrictedportaladminonly/products"
                             style={{
                               padding: "4px 10px",
                               borderRadius: "4px",
@@ -310,7 +310,7 @@ export default function AdminDashboardPage() {
                   <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>Latest purchases waiting for fulfillment</div>
                 </div>
                 <Link
-                  href="/admin/orders"
+                  href="/restrictedportaladminonly/orders"
                   style={{ color: "var(--plum, #4a154b)", fontSize: "0.82rem", fontWeight: 700 }}
                 >
                   View All Orders →
@@ -393,7 +393,7 @@ export default function AdminDashboardPage() {
                   <div style={{ fontSize: "0.75rem", color: "#6b7280" }}>Live customer chats from the storefront</div>
                 </div>
                 <Link
-                  href="/admin/messages"
+                  href="/restrictedportaladminonly/messages"
                   style={{ color: "var(--plum, #4a154b)", fontSize: "0.82rem", fontWeight: 700 }}
                 >
                   Open Chat Inbox →
@@ -469,16 +469,16 @@ export default function AdminDashboardPage() {
             }}
           >
             {[
-              { title: "👗 Products & Inventory", desc: "Add, edit, stock count, SKU, prices & sizes.", href: "/admin/products" },
-              { title: "📦 Order Dispatch", desc: "View items, update status, and manage courier details.", href: "/admin/orders" },
-              { title: "🚚 Shipping & Couriers", desc: "Manage GIGL, DHL, FedEx tracking and dispatch queue.", href: "/admin/shipping" },
-              { title: "💳 Payments", desc: "Verify transactions, webhooks, and refunds.", href: "/admin/payments" },
-              { title: "👥 Registered Clients", desc: "Client contact info, addresses, and order history.", href: "/admin/customers" },
-              { title: "✅ User Approvals", desc: "Review and approve new registered customers.", href: "/admin/approvals" },
-              { title: "💬 Live Chat Inbox", desc: "Reply in real time to customer sizing & order inquiries.", href: "/admin/messages" },
-              { title: "👁️ Visitor Analytics", desc: "Privacy-conscious tracking of storefront visitors.", href: "/admin/visitors" },
-              { title: "📈 Store Analytics", desc: "Revenue graphs, order volume, and performance.", href: "/admin/analytics" },
-              { title: "⚙️ Store Configuration", desc: "Atelier details, default shipping fees & admin credentials.", href: "/admin/settings" },
+              { title: "👗 Products & Inventory", desc: "Add, edit, stock count, SKU, prices & sizes.", href: "/restrictedportaladminonly/products" },
+              { title: "📦 Order Dispatch", desc: "View items, update status, and manage courier details.", href: "/restrictedportaladminonly/orders" },
+              { title: "🚚 Shipping & Couriers", desc: "Manage GIGL, DHL, FedEx tracking and dispatch queue.", href: "/restrictedportaladminonly/shipping" },
+              { title: "💳 Payments", desc: "Verify transactions, webhooks, and refunds.", href: "/restrictedportaladminonly/payments" },
+              { title: "👥 Registered Clients", desc: "Client contact info, addresses, and order history.", href: "/restrictedportaladminonly/customers" },
+              { title: "✅ User Approvals", desc: "Review and approve new registered customers.", href: "/restrictedportaladminonly/approvals" },
+              { title: "💬 Live Chat Inbox", desc: "Reply in real time to customer sizing & order inquiries.", href: "/restrictedportaladminonly/messages" },
+              { title: "👁️ Visitor Analytics", desc: "Privacy-conscious tracking of storefront visitors.", href: "/restrictedportaladminonly/visitors" },
+              { title: "📈 Store Analytics", desc: "Revenue graphs, order volume, and performance.", href: "/restrictedportaladminonly/analytics" },
+              { title: "⚙️ Store Configuration", desc: "Atelier details, default shipping fees & admin credentials.", href: "/restrictedportaladminonly/settings" },
             ].map((mod, i) => (
               <Link
                 key={i}
