@@ -15,23 +15,23 @@ export default function AdminLayout({
   const [loggingOut, setLoggingOut] = useState(false);
 
   // If on admin login page, render clean layout without admin dashboard chrome
-  if (pathname === "/admin/login") {
+  if (pathname === "/restrictedportaladminonly/login") {
     return <>{children}</>;
   }
 
   const navItems = [
-    { label: "Dashboard", href: "/admin", icon: "📊" },
-    { label: "Products", href: "/admin/products", icon: "👗" },
-    { label: "Orders", href: "/admin/orders", icon: "📦" },
-    { label: "Customers", href: "/admin/customers", icon: "👥" },
-    { label: "User Approvals", href: "/admin/approvals", icon: "✅" },
-    { label: "Visitors", href: "/admin/visitors", icon: "👁️" },
-    { label: "Messages", href: "/admin/messages", icon: "💬" },
-    { label: "Shipping", href: "/admin/shipping", icon: "🚚" },
-    { label: "Payments", href: "/admin/payments", icon: "💳" },
-    { label: "Analytics", href: "/admin/analytics", icon: "📈" },
-    { label: "API Integrations", href: "/admin/integrations", icon: "🔌" },
-    { label: "Settings", href: "/admin/settings", icon: "⚙️" },
+    { label: "Dashboard", href: "/restrictedportaladminonly", icon: "📊" },
+    { label: "Products", href: "/restrictedportaladminonly/products", icon: "👗" },
+    { label: "Orders", href: "/restrictedportaladminonly/orders", icon: "📦" },
+    { label: "Customers", href: "/restrictedportaladminonly/customers", icon: "👥" },
+    { label: "User Approvals", href: "/restrictedportaladminonly/approvals", icon: "✅" },
+    { label: "Visitors", href: "/restrictedportaladminonly/visitors", icon: "👁️" },
+    { label: "Messages", href: "/restrictedportaladminonly/messages", icon: "💬" },
+    { label: "Shipping", href: "/restrictedportaladminonly/shipping", icon: "🚚" },
+    { label: "Payments", href: "/restrictedportaladminonly/payments", icon: "💳" },
+    { label: "Analytics", href: "/restrictedportaladminonly/analytics", icon: "📈" },
+    { label: "API Integrations", href: "/restrictedportaladminonly/integrations", icon: "🔌" },
+    { label: "Settings", href: "/restrictedportaladminonly/settings", icon: "⚙️" },
   ];
 
   const handleLogout = async () => {
@@ -39,10 +39,10 @@ export default function AdminLayout({
     setLoggingOut(true);
     try {
       await fetch("/api/admin/auth/logout", { method: "POST" });
-      router.push("/admin/login");
+      router.push("/restrictedportaladminonly/login");
       router.refresh();
     } catch {
-      router.push("/admin/login");
+      router.push("/restrictedportaladminonly/login");
     } finally {
       setLoggingOut(false);
     }
@@ -151,8 +151,8 @@ export default function AdminLayout({
 
           {navItems.map((item) => {
             const isActive =
-              item.href === "/admin"
-                ? pathname === "/admin"
+              item.href === "/restrictedportaladminonly"
+                ? pathname === "/restrictedportaladminonly"
                 : pathname.startsWith(item.href);
 
             return (
