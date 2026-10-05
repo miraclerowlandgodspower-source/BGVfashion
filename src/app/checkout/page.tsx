@@ -29,6 +29,8 @@ export default function CheckoutPage() {
   const [discountApplied, setDiscountApplied] = useState(false);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"PAYSTACK" | "BACS_GBP" | "SWIFT_USD">("PAYSTACK");
+  const [transferInstructions, setTransferInstructions] = useState<any>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -121,6 +123,26 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
+      if (paymentMethod !== "PAYSTACK") {
+        const transferRes = await fetch("/api/checkout/bank-transfer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: cart,
+            shippingAddress: formData,
+            rail: paymentMethod,
+          }),
+        });
+        const transferJson = await transferRes.json();
+        if (!transferJson.success || !transferJson.data) {
+          throw new Error(transferJson.error || "Could not create the bank-transfer order.");
+        }
+        setTransferInstructions(transferJson.data);
+        showToast("Bank transfer instructions created. Use the exact order reference.");
+        setLoading(false);
+        return;
+      }
+
       const res = await fetch("/api/checkout/initialize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -298,52 +320,53 @@ export default function CheckoutPage() {
             />
           </label>
 
-          {/* Paystack Exclusive Payment Method Section */}
+          {/* Secure payment methods */}
           <div style={{ marginTop: "36px" }}>
-            <h2 style={{ fontSize: "1.4rem", fontWeight: 900, marginBottom: "16px" }}>
-              2. Payment Method
-            </h2>
-
-            <div
-              style={{
-                border: "2px solid #000",
-                borderRadius: "12px",
-                padding: "20px",
-                background: "#FAF8F9",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                <PaystackIcon width={48} height={30} />
-                <div>
-                  <div style={{ fontWeight: 900, fontSize: "1rem", color: "#000" }}>
-                    Paystack Payment Gateway
-                  </div>
-                  <div style={{ fontSize: "0.82rem", color: "#64748B", marginTop: "2px" }}>
-                    Debit / Credit Card, Bank Transfer, USSD, Apple Pay
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  width: "22px",
-                  height: "22px",
-                  borderRadius: "50%",
-                  background: "#000",
-                  color: "#FFF",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "0.8rem",
-                  fontWeight: 900,
-                }}
-              >
-                ✓
-              </div>
+            <h2 style={{ fontSize: "1.4rem", fontWeight: 900, marginBottom: "16px" }}>2. Payment Method</h2>
+            <div className="bgv-payment-grid">
+              {[
+                { id: "PAYSTACK", title: "Paystack", copy: "Card, bank transfer, USSD and supported wallets. Secure hosted checkout." },
+                { id: "BACS_GBP", title: "UK Bank Transfer (Bacs)", copy: "GBP transfer for customers paying from a UK bank account." },
+                { id: "SWIFT_USD", title: "International USD Transfer", copy: "Pay in US dollars by international bank transfer / SWIFT." },
+              ].map((method) => {
+                const active = paymentMethod === method.id;
+                return (
+                  <button
+                    key={method.id}
+                    type="button"
+                    className={`bgv-glass-card bgv-payment-option ${active ? "is-active" : ""}`}
+                    onClick={() => {
+                      setPaymentMethod(method.id as typeof paymentMethod);
+                      setTransferInstructions(null);
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      {method.id === "PAYSTACK" ? <PaystackIcon width={44} height={28} /> : <span className="bgv-bank-mark">$</span>}
+                      <div style={{ textAlign: "left" }}>
+                        <strong>{method.title}</strong>
+                        <span>{method.copy}</span>
+                      </div>
+                    </div>
+                    <span className="bgv-payment-check">{active ? "✓" : ""}</span>
+                  </button>
+                );
+              })}
             </div>
+
+            {transferInstructions && (
+              <div className="bgv-glass-card bgv-transfer-instructions" role="status">
+                <p className="bgv-transfer-kicker">TRANSFER INSTRUCTIONS</p>
+                <h3>{transferInstructions.currency} {Number(transferInstructions.amount).toFixed(2)}</h3>
+                <p>Reference: <strong>{transferInstructions.reference}</strong></p>
+                {Object.entries(transferInstructions.bankDetails || {}).filter(([, value]) => Boolean(value)).map(([key, value]) => (
+                  <div className="bgv-bank-row" key={key}>
+                    <span>{key.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase())}</span>
+                    <strong>{String(value)}</strong>
+                  </div>
+                ))}
+                <p className="bgv-transfer-note">Use the exact reference above. Your order stays pending until BGV confirms that the funds have cleared.</p>
+              </div>
+            )}
           </div>
         </section>
 
@@ -512,7 +535,7 @@ export default function CheckoutPage() {
               borderRadius: "10px",
             }}
           >
-            {loading ? "Processing..." : `Complete Order with Paystack`}
+            {loading ? "Processing..." : paymentMethod === "PAYSTACK" ? "Continue to Paystack" : transferInstructions ? "Instructions Ready" : "Create Transfer Order"}
           </button>
         </aside>
       </form>
