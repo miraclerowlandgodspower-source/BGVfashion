@@ -15,7 +15,9 @@ function addressText(address: Order["shippingAddress"]): string {
     .filter(Boolean).map(escapeHtml).join(", ");
 }
 
-function receiptHtml(order: Order, items: OrderItem[], transactionId?: string | null, paymentProvider?: string | null): string {\n  const provider = paymentProvider || order.paymentMethod || "Paystack";\n  const paymentReference = provider.toLowerCase() === "bachs" ? (transactionId || "Available in payment record") : (order.paystackReference || transactionId || "Available in payment record");
+function receiptHtml(order: Order, items: OrderItem[], transactionId?: string | null, paymentProvider?: string | null): string {
+  const provider = paymentProvider || order.paymentMethod || "Paystack";
+  const paymentReference = provider.toLowerCase() === "bachs" ? (transactionId || "Available in payment record") : (order.paystackReference || transactionId || "Available in payment record");
   const itemRows = items.map((item) => `
     <tr>
       <td style="padding:15px 0;border-bottom:1px solid #30272b;color:#f6efe6">${escapeHtml(item.productName)}<br><small style="color:#91868b">Size: ${escapeHtml(item.size)} · Colour: ${escapeHtml(item.colour || "As selected")}</small></td>
@@ -80,7 +82,8 @@ export async function sendOrderReceiptEmails(order: Order, items: OrderItem[], t
     return false;
   }
 
-  const provider = paymentProvider || order.paymentMethod || "Paystack";\n  const html = receiptHtml(order, items, transactionId, provider);
+  const provider = paymentProvider || order.paymentMethod || "Paystack";
+  const html = receiptHtml(order, items, transactionId, provider);
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
