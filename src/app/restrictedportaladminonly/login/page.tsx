@@ -7,7 +7,7 @@ import Link from "next/link";
 function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams.get("redirect") || "/admin";
+  const redirectPath = searchParams.get("redirect") || "/restrictedportaladminonly";
   const errorParam = searchParams.get("error");
 
   const [email, setEmail] = useState("");
