@@ -29,7 +29,7 @@ export default function CheckoutPage() {
   const [discountApplied, setDiscountApplied] = useState(false);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"PAYSTACK" | "BACS_GBP" | "SWIFT_USD">("PAYSTACK");
+  const [paymentMethod, setPaymentMethod] = useState<"PAYSTACK" | "BACHS">("PAYSTACK");
   const [transferInstructions, setTransferInstructions] = useState<any>(null);
   const [error, setError] = useState("");
 
