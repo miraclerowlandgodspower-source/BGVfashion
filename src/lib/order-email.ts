@@ -15,7 +15,7 @@ function addressText(address: Order["shippingAddress"]): string {
     .filter(Boolean).map(escapeHtml).join(", ");
 }
 
-function receiptHtml(order: Order, items: OrderItem[], transactionId?: string | null): string {
+function receiptHtml(order: Order, items: OrderItem[], transactionId?: string | null, paymentProvider?: string | null): string {\n  const provider = paymentProvider || order.paymentMethod || "Paystack";\n  const paymentReference = provider.toLowerCase() === "bachs" ? (transactionId || "Available in payment record") : (order.paystackReference || transactionId || "Available in payment record");
   const itemRows = items.map((item) => `
     <tr>
       <td style="padding:15px 0;border-bottom:1px solid #30272b;color:#f6efe6">${escapeHtml(item.productName)}<br><small style="color:#91868b">Size: ${escapeHtml(item.size)} · Colour: ${escapeHtml(item.colour || "As selected")}</small></td>
@@ -72,7 +72,7 @@ function receiptHtml(order: Order, items: OrderItem[], transactionId?: string | 
 </table></td></tr></table></body></html>`;
 }
 
-export async function sendOrderReceiptEmails(order: Order, items: OrderItem[], transactionId?: string | null): Promise<boolean> {
+export async function sendOrderReceiptEmails(order: Order, items: OrderItem[], transactionId?: string | null, paymentProvider?: string | null): Promise<boolean> {
   const apiKey = process.env.EMAIL_API_KEY;
   const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || "admin@bgvfashion.shop";
   if (!apiKey) {
@@ -80,7 +80,7 @@ export async function sendOrderReceiptEmails(order: Order, items: OrderItem[], t
     return false;
   }
 
-  const html = receiptHtml(order, items, transactionId);
+  const provider = paymentProvider || order.paymentMethod || "Paystack";\n  const html = receiptHtml(order, items, transactionId, provider);
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -89,9 +89,9 @@ export async function sendOrderReceiptEmails(order: Order, items: OrderItem[], t
       to: [order.customerEmail],
       bcc: [adminEmail],
       reply_to: SUPPORT_EMAIL,
-      subject: `BGV order confirmed · ${order.orderNumber}`,
+      subject: `BGV ${provider} payment receipt · ${order.orderNumber}`,
       html,
-      text: `Your BGV order ${order.orderNumber} is confirmed. Payment has been verified. Track your order at ${process.env.NEXT_PUBLIC_APP_URL || "https://bgvfashion.shop"}/track-order?query=${encodeURIComponent(order.orderNumber)}. Need help? ${SUPPORT_EMAIL}`,
+      text: `Your BGV order ${order.orderNumber} is confirmed. ${provider} payment has been verified. Track your order at ${process.env.NEXT_PUBLIC_APP_URL || "https://bgvfashion.shop"}/track-order?query=${encodeURIComponent(order.orderNumber)}. Need help? ${SUPPORT_EMAIL}`,
     }),
   });
 
