@@ -123,23 +123,18 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      if (paymentMethod !== "PAYSTACK") {
-        const transferRes = await fetch("/api/checkout/bank-transfer", {
+      if (paymentMethod === "BACHS") {
+        const bachsRes = await fetch("/api/checkout/bachs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            items: cart,
-            shippingAddress: formData,
-            rail: paymentMethod,
-          }),
+          body: JSON.stringify({ items: cart, shippingAddress: formData }),
         });
-        const transferJson = await transferRes.json();
-        if (!transferJson.success || !transferJson.data) {
-          throw new Error(transferJson.error || "Could not create the bank-transfer order.");
+        const bachsJson = await bachsRes.json();
+        if (!bachsJson.success || !bachsJson.data?.checkoutUrl) {
+          throw new Error(bachsJson.error || "Could not initialize Bachs checkout.");
         }
-        setTransferInstructions(transferJson.data);
-        showToast("Bank transfer instructions created. Use the exact order reference.");
-        setLoading(false);
+        showToast("Redirecting to Bachs secure checkout...");
+        window.location.assign(bachsJson.data.checkoutUrl);
         return;
       }
 
@@ -325,48 +320,21 @@ export default function CheckoutPage() {
             <h2 style={{ fontSize: "1.4rem", fontWeight: 900, marginBottom: "16px" }}>2. Payment Method</h2>
             <div className="bgv-payment-grid">
               {[
-                { id: "PAYSTACK", title: "Paystack", copy: "Card, bank transfer, USSD and supported wallets. Secure hosted checkout." },
-                { id: "BACS_GBP", title: "UK Bank Transfer (Bacs)", copy: "GBP transfer for customers paying from a UK bank account." },
-                { id: "SWIFT_USD", title: "International USD Transfer", copy: "Pay in US dollars by international bank transfer / SWIFT." },
+                { id: "PAYSTACK", title: "Paystack", copy: "Secure hosted checkout for supported local payment methods." },
+                { id: "BACHS", title: "Bachs", copy: "International hosted checkout with USD support." },
               ].map((method) => {
                 const active = paymentMethod === method.id;
                 return (
-                  <button
-                    key={method.id}
-                    type="button"
-                    className={`bgv-glass-card bgv-payment-option ${active ? "is-active" : ""}`}
-                    onClick={() => {
-                      setPaymentMethod(method.id as typeof paymentMethod);
-                      setTransferInstructions(null);
-                    }}
-                  >
+                  <button key={method.id} type="button" className={`bgv-glass-card bgv-payment-option ${active ? "is-active" : ""}`} onClick={() => setPaymentMethod(method.id as typeof paymentMethod)}>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                       {method.id === "PAYSTACK" ? <PaystackIcon width={44} height={28} /> : <span className="bgv-bank-mark">$</span>}
-                      <div style={{ textAlign: "left" }}>
-                        <strong>{method.title}</strong>
-                        <span>{method.copy}</span>
-                      </div>
+                      <div style={{ textAlign: "left" }}><strong>{method.title}</strong><span>{method.copy}</span></div>
                     </div>
                     <span className="bgv-payment-check">{active ? "✓" : ""}</span>
                   </button>
                 );
               })}
             </div>
-
-            {transferInstructions && (
-              <div className="bgv-glass-card bgv-transfer-instructions" role="status">
-                <p className="bgv-transfer-kicker">TRANSFER INSTRUCTIONS</p>
-                <h3>{transferInstructions.currency} {Number(transferInstructions.amount).toFixed(2)}</h3>
-                <p>Reference: <strong>{transferInstructions.reference}</strong></p>
-                {Object.entries(transferInstructions.bankDetails || {}).filter(([, value]) => Boolean(value)).map(([key, value]) => (
-                  <div className="bgv-bank-row" key={key}>
-                    <span>{key.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase())}</span>
-                    <strong>{String(value)}</strong>
-                  </div>
-                ))}
-                <p className="bgv-transfer-note">Use the exact reference above. Your order stays pending until BGV confirms that the funds have cleared.</p>
-              </div>
-            )}
           </div>
         </section>
 
@@ -522,9 +490,9 @@ export default function CheckoutPage() {
           </div>
 
           <button
-            type={transferInstructions && paymentMethod !== "PAYSTACK" ? "button" : "submit"}
+            type="submit"
             className="button full-width"
-            disabled={loading || Boolean(transferInstructions && paymentMethod !== "PAYSTACK")}
+            disabled={loading}
             style={{
               marginTop: "24px",
               background: "#000",
@@ -535,7 +503,7 @@ export default function CheckoutPage() {
               borderRadius: "10px",
             }}
           >
-            {loading ? "Processing..." : paymentMethod === "PAYSTACK" ? "Continue to Paystack" : transferInstructions ? "Instructions Ready" : "Create Transfer Order"}
+            {loading ? "Processing..." : paymentMethod === "PAYSTACK" ? "Continue to Paystack" : "Continue to Bachs"}
           </button>
         </aside>
       </form>
