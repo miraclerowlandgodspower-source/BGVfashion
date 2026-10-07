@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: "BGV Fashion — Luxury Contemporary Wardrobe",
   description:
     "Explore luxury contemporary women's and men's fashion. Handcrafted pieces dispatched from Ojo, Lagos to 193 countries worldwide.",
-  icons: {
+  other: {\n    "google-adsense-account": "ca-pub-3500745331176052",\n  },\n  icons: {
     icon: "/icon.png",
   },
 };
