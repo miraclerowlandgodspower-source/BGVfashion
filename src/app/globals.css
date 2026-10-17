@@ -1494,3 +1494,80 @@ body { background: var(--minimal-paper); color: var(--minimal-black); }
 .bgv-bank-row strong { text-align:right; overflow-wrap:anywhere; }
 .bgv-transfer-note { margin-top:16px; color:#5d5d5d; font-size:.8rem; line-height:1.6; }
 @media (prefers-reduced-motion: reduce) { .bgv-payment-option { transition:none; } }
+
+
+/* BGV Liquid Glass — progressive enhancement for storefront surfaces.
+   Keeps typography and product photography crisp; no blur on content itself. */
+:root {
+  --liquid-glass-fill: rgba(255, 255, 255, .68);
+  --liquid-glass-edge: rgba(255, 255, 255, .82);
+  --liquid-glass-shadow: 0 12px 38px rgba(18, 20, 28, .10), inset 0 1px 0 rgba(255, 255, 255, .8);
+}
+.bgv-liquid-glass,
+.bgv-glass-card,
+.modal-content {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(145deg, rgba(255,255,255,.82), var(--liquid-glass-fill) 54%, rgba(242,244,248,.70));
+  border: 1px solid var(--liquid-glass-edge);
+  border-radius: 22px;
+  box-shadow: var(--liquid-glass-shadow);
+  -webkit-backdrop-filter: blur(20px) saturate(155%);
+  backdrop-filter: blur(20px) saturate(155%);
+}
+.bgv-liquid-glass::before,
+.bgv-glass-card::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(155deg, rgba(255,255,255,.42), transparent 42%, rgba(255,255,255,.10) 100%);
+  z-index: -1;
+}
+.bgv-liquid-glass-interactive {
+  transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+.bgv-liquid-glass-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 44px rgba(18,20,28,.15), inset 0 1px 0 rgba(255,255,255,.85);
+}
+.bgv-liquid-glass-interactive:focus-visible { outline: 3px solid #111; outline-offset: 3px; }
+.header-main .icon-button,
+.header-actions .icon-button,
+.header-actions .region-button,
+.header-actions a,
+.search-form,
+.mobile-menu-search {
+  border-radius: 999px;
+  background: rgba(250,250,250,.70);
+  border: 1px solid rgba(255,255,255,.85);
+  box-shadow: 0 5px 18px rgba(20,20,20,.06), inset 0 1px 0 rgba(255,255,255,.78);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  backdrop-filter: blur(14px) saturate(150%);
+}
+.header-main .icon-button,
+.header-actions .icon-button,
+.header-actions .region-button,
+.header-actions a { transition: background-color .18s ease, box-shadow .18s ease; }
+.header-main .icon-button:hover,
+.header-actions .icon-button:hover,
+.header-actions .region-button:hover,
+.header-actions a:hover { background: rgba(255,255,255,.94); box-shadow: 0 8px 22px rgba(20,20,20,.11); }
+@media (max-width: 767px) {
+  .bgv-liquid-glass, .bgv-glass-card, .modal-content { border-radius: 18px; }
+  .mobile-shop-menu { -webkit-backdrop-filter: blur(24px) saturate(135%); backdrop-filter: blur(24px) saturate(135%); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .bgv-liquid-glass, .bgv-glass-card, .modal-content,
+  .header-main .icon-button, .header-actions .icon-button,
+  .header-actions .region-button, .header-actions a, .search-form, .mobile-menu-search {
+    background: #fff;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bgv-liquid-glass-interactive { transition: none; }
+  .bgv-liquid-glass-interactive:hover { transform: none; }
+}
