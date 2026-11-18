@@ -153,77 +153,71 @@ export async function getProducts(options?: {
   includeInactive?: boolean;
 }): Promise<Product[]> {
   const db = getDb();
-  let list: Product[] = [];
-
-  if (db) {
-    try {
-      const dbProducts = await db.select().from(schema.products);
-      if (dbProducts && dbProducts.length > 0) {
-        list = dbProducts.map((p) => ({
-          id: p.id,
-          name: p.name,
-          department: p.department as any,
-          category: p.category,
-          categoryId: p.categoryId,
-          price: p.price,
-          salePrice: p.salePrice,
-          sku: p.sku,
-          stockQuantity: p.stockQuantity ?? 10,
-          sheet: p.sheet,
-          quadrant: p.quadrant as 0 | 1 | 2 | 3,
-          image: p.image,
-          colors: (p.colors as string[]) || [],
-          sizes: (p.sizes as string[]) || [],
-          description: p.description,
-          inStock: p.inStock,
-          featured: p.featured,
-          newArrival: p.newArrival,
-          status: (p.status as any) || "active",
-          createdAt: p.createdAt ? p.createdAt.toISOString() : undefined,
-        }));
-      } else {
-        await seedDatabase();
-        list = [...inMemoryStore.products];
-      }
-    } catch (e) {
-      dbConnectionFailed = true;
-      list = [...inMemoryStore.products];
-    }
-  } else {
-    list = [...inMemoryStore.products];
+  if (!db) {
+    throw new Error("Database unavailable. Product catalogue cannot be loaded.");
   }
 
-  // Filter by status for customer storefront (unless includeInactive is true)
+  let dbProducts;
+  try {
+    dbProducts = await db.select().from(schema.products);
+    if (dbProducts.length === 0) {
+      await seedDatabase();
+      dbProducts = await db.select().from(schema.products);
+    }
+  } catch (error) {
+    dbConnectionFailed = true;
+    console.error("Product catalogue database read failed:", error);
+    throw new Error("Database read failed. Product catalogue was not loaded from temporary memory.");
+  }
+
+  let list: Product[] = dbProducts.map((p) => ({
+    id: p.id,
+    name: p.name,
+    department: p.department as any,
+    category: p.category,
+    categoryId: p.categoryId,
+    price: p.price,
+    salePrice: p.salePrice,
+    sku: p.sku,
+    stockQuantity: p.stockQuantity ?? 10,
+    sheet: p.sheet,
+    quadrant: p.quadrant as 0 | 1 | 2 | 3,
+    image: p.image,
+    colors: (p.colors as string[]) || [],
+    sizes: (p.sizes as string[]) || [],
+    description: p.description,
+    inStock: p.inStock,
+    featured: p.featured,
+    newArrival: p.newArrival,
+    status: (p.status as any) || "active",
+    createdAt: p.createdAt ? p.createdAt.toISOString() : undefined,
+  }));
+
   if (!options?.includeInactive) {
     list = list.filter((p) => (p.status || "active") === "active");
   } else if (options?.status) {
     list = list.filter((p) => p.status === options.status);
   }
 
-  // Filter by department
   if (options?.department && ["Women", "Men", "Unisex"].includes(options.department)) {
     list = list.filter((p) => p.department.toLowerCase() === options.department?.toLowerCase());
   }
 
-  // Filter by category
   if (options?.category && options.category !== "All categories") {
     list = list.filter((p) => p.category.toLowerCase() === options.category?.toLowerCase());
   }
 
-  // Search query
   if (options?.search) {
     const q = options.search.toLowerCase();
-    list = list.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q) ||
-        p.department.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        (p.sku && p.sku.toLowerCase().includes(q))
+    list = list.filter((p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q) ||
+      p.department.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      (p.sku && p.sku.toLowerCase().includes(q))
     );
   }
 
-  // Sort
   if (options?.sort === "low") {
     list.sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
   } else if (options?.sort === "high") {
@@ -232,7 +226,6 @@ export async function getProducts(options?: {
 
   return list;
 }
-
 export async function getProductById(id: string): Promise<Product | null> {
   const all = await getProducts({ includeInactive: true });
   return all.find((p) => p.id === id) || null;
