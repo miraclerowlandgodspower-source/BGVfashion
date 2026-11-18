@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { getDb, inMemoryStore, getProducts } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import * as schema from "@/db/schema";
 import { checkAdminApiAccess } from "@/lib/auth";
 import { eq } from "drizzle-orm";
@@ -8,34 +8,32 @@ import { Product } from "@/types";
 
 export async function GET(req: Request) {
   const { authorized, errorResponse } = await checkAdminApiAccess();
-  if (!authorized) {
-    return errorResponse!;
+  if (!authorized) return errorResponse!;
+
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({ success: false, error: "Database unavailable. Products cannot be loaded safely." }, { status: 503 });
   }
 
   try {
     const { searchParams } = new URL(req.url);
-    const search = searchParams.get("search") || undefined;
+    const search = (searchParams.get("search") || "").trim().toLowerCase();
     const category = searchParams.get("category") || undefined;
     const department = searchParams.get("department") || undefined;
     const status = searchParams.get("status") || undefined;
 
-    const products = await getProducts({
-      search,
-      category,
-      department,
-      status,
-      includeInactive: true,
-    });
+    let products = await db.select().from(schema.products);
+    if (status) products = products.filter((p) => p.status === status);
+    if (category && category !== "All categories") products = products.filter((p) => p.category.toLowerCase() === category.toLowerCase());
+    if (department) products = products.filter((p) => p.department.toLowerCase() === department.toLowerCase());
+    if (search) products = products.filter((p) => p.name.toLowerCase().includes(search) || p.category.toLowerCase().includes(search) || p.department.toLowerCase().includes(search) || p.description.toLowerCase().includes(search) || (p.sku || "").toLowerCase().includes(search));
 
     return NextResponse.json({ success: true, data: { products } });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch products catalogue." },
-      { status: 500 }
-    );
+  } catch (error) {
+    console.error("Failed to fetch admin product catalogue from database:", error);
+    return NextResponse.json({ success: false, error: "Database read failed. No fallback catalogue was returned." }, { status: 503 });
   }
 }
-
 export async function POST(req: Request) {
   const { authorized, errorResponse } = await checkAdminApiAccess();
   if (!authorized) {
@@ -105,34 +103,32 @@ export async function POST(req: Request) {
     };
 
     const db = getDb();
-    if (db) {
-      try {
-        await db.insert(schema.products).values({
-          id: newProduct.id,
-          name: newProduct.name,
-          department: newProduct.department,
-          category: newProduct.category,
-          price: newProduct.price,
-          salePrice: newProduct.salePrice,
-          sku: newProduct.sku,
-          stockQuantity: newProduct.stockQuantity,
-          sheet: newProduct.sheet || "women.png",
-          quadrant: newProduct.quadrant ?? 0,
-          image: newProduct.image,
-          colors: newProduct.colors,
-          sizes: newProduct.sizes,
-          description: newProduct.description,
-          inStock: newProduct.inStock ?? true,
-          featured: newProduct.featured ?? false,
-          newArrival: newProduct.newArrival ?? false,
-          status: newProduct.status || "active",
-        });
-      } catch (err) {
-        console.warn("DB product insert error (falling back to memory):", err);
-      }
+    if (!db) {
+      return NextResponse.json({ success: false, error: "Database unavailable. Product was not saved." }, { status: 503 });
     }
 
-    inMemoryStore.products.unshift(newProduct);
+    await db.insert(schema.products).values({
+      id: newProduct.id,
+      name: newProduct.name,
+      department: newProduct.department,
+      category: newProduct.category,
+      price: newProduct.price,
+      salePrice: newProduct.salePrice,
+      sku: newProduct.sku,
+      stockQuantity: newProduct.stockQuantity,
+      sheet: newProduct.sheet || "women.png",
+      quadrant: newProduct.quadrant ?? 0,
+      image: newProduct.image,
+      colors: newProduct.colors,
+      sizes: newProduct.sizes,
+      description: newProduct.description,
+      inStock: newProduct.inStock ?? true,
+      featured: newProduct.featured ?? false,
+      newArrival: newProduct.newArrival ?? false,
+      status: newProduct.status || "active",
+    });
+    revalidatePath("/");
+    revalidatePath("/shop");
 
     return NextResponse.json({
       success: true,
@@ -201,24 +197,23 @@ export async function PUT(req: Request) {
     if (image !== undefined) updates.image = image;
 
     const db = getDb();
-    if (db) {
-      try {
-        await db.update(schema.products).set(updates).where(eq(schema.products.id, id));
-      } catch (err) {
-        console.warn("DB product update error (falling back to memory):", err);
-      }
+    if (!db) {
+      return NextResponse.json({ success: false, error: "Database unavailable. Product changes were not saved." }, { status: 503 });
     }
 
-    // Update in-memory store
-    const item = inMemoryStore.products.find((p) => p.id === id);
-    if (item) {
-      Object.assign(item, updates);
+    const updated = await db.update(schema.products).set(updates).where(eq(schema.products.id, id)).returning();
+    if (updated.length === 0) {
+      return NextResponse.json({ success: false, error: "Product not found." }, { status: 404 });
     }
+
+    revalidatePath("/");
+    revalidatePath("/shop");
+    revalidatePath(`/product/${id}`);
 
     return NextResponse.json({
       success: true,
-      message: "Product updated successfully!",
-      data: { product: item || updates },
+      message: "Product updated and saved to database.",
+      data: { product: updated[0] },
     });
   } catch (error: any) {
     console.error("Failed to update product:", error);
@@ -244,19 +239,21 @@ export async function DELETE(req: Request) {
     }
 
     const db = getDb();
-    if (db) {
-      try {
-        await db.delete(schema.products).where(eq(schema.products.id, id));
-      } catch (err) {
-        console.warn("DB product delete error:", err);
-      }
+    if (!db) {
+      return NextResponse.json({ success: false, error: "Database unavailable. Product was not deleted." }, { status: 503 });
     }
 
-    inMemoryStore.products = inMemoryStore.products.filter((p) => p.id !== id);
+    const deleted = await db.delete(schema.products).where(eq(schema.products.id, id)).returning({ id: schema.products.id });
+    if (deleted.length === 0) {
+      return NextResponse.json({ success: false, error: "Product not found." }, { status: 404 });
+    }
+
+    revalidatePath("/");
+    revalidatePath("/shop");
 
     return NextResponse.json({
       success: true,
-      message: "Product removed from catalogue successfully.",
+      message: "Product deleted from database and catalogue.",
     });
   } catch (error: any) {
     console.error("Failed to delete product:", error);
