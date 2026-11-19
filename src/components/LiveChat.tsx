@@ -128,7 +128,7 @@ export function LiveChat() {
     }
   };
 
-  if (pathname?.startsWith("/admin")) {
+  if (pathname?.startsWith("/restrictedportaladminonly")) {
     return null;
   }
 
