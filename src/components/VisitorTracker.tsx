@@ -7,7 +7,7 @@ export function VisitorTracker() {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (pathname.startsWith("/admin")) return;
+    if (pathname.startsWith("/restrictedportaladminonly")) return;
     let sessionId = window.localStorage.getItem("bgv_visitor_session");
     if (!sessionId) {
       sessionId = `${crypto.randomUUID()}-${Math.random().toString(36).slice(2, 10)}`;
