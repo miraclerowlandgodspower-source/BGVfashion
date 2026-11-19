@@ -92,28 +92,13 @@ export default function AdminLayout({
             justifyContent: "space-between",
           }}
         >
-          <div>
-            <div
-              style={{
-                fontSize: "1.25rem",
-                fontWeight: 900,
-                letterSpacing: "0.08em",
-                color: "#ffffff",
-              }}
-            >
-              BGV ATELIER
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div aria-label="BGV logo" style={{ width: "42px", height: "42px", border: "1px solid rgba(255,255,255,0.65)", borderRadius: "10px", display: "grid", placeItems: "center", color: "#fff", fontWeight: 950, fontSize: "1rem", letterSpacing: "-0.08em", background: "linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02))" }}>
+              BGV
             </div>
-            <div
-              style={{
-                fontSize: "0.68rem",
-                color: "var(--coral, #f472b6)",
-                fontWeight: 800,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-                marginTop: "2px",
-              }}
-            >
-              Management Portal
+            <div>
+              <div style={{ fontSize: "1.05rem", fontWeight: 900, letterSpacing: "0.08em", color: "#ffffff" }}>BGV ATELIER</div>
+              <div style={{ fontSize: "0.68rem", color: "var(--coral, #f472b6)", fontWeight: 800, letterSpacing: "0.15em", textTransform: "uppercase", marginTop: "2px" }}>Management Portal</div>
             </div>
           </div>
 
