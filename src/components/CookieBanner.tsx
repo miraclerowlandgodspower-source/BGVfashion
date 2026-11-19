@@ -27,7 +27,7 @@ export function CookieBanner() {
     setVisible(false);
   };
 
-  if (!visible || pathname?.startsWith("/admin")) return null;
+  if (!visible || pathname?.startsWith("/restrictedportaladminonly")) return null;
 
   return (
     <aside
