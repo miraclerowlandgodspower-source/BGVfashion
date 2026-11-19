@@ -39,7 +39,7 @@ export function Header() {
     }
   };
 
-  if (pathname?.startsWith("/admin")) return null;
+  if (pathname?.startsWith("/restrictedportaladminonly")) return null;
 
   return (
     <header>
