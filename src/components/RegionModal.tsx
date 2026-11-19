@@ -1,18 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
+import { usePathname } from "next/navigation";
 import { useStore } from "@/context/StoreContext";
 import { CloseIcon } from "./Icons";
 import { SUPPORTED_COUNTRIES, SUPPORTED_CURRENCIES } from "@/lib/money";
 
 export function RegionModal() {
+  const pathname = usePathname();
   const { isRegionModalOpen, setIsRegionModalOpen, country, setCountry, currency, setCurrency, showToast } =
     useStore();
 
   const [selectedCountry, setSelectedCountry] = useState(country);
   const [selectedCurrency, setSelectedCurrency] = useState(currency);
 
-  if (!isRegionModalOpen) return null;
+  if (!isRegionModalOpen || pathname?.startsWith("/restrictedportaladminonly")) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
