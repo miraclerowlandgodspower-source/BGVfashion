@@ -17,7 +17,7 @@ export function Footer() {
   const pathname = usePathname();
   const currentYear = new Date().getFullYear();
 
-  if (pathname?.startsWith("/admin")) {
+  if (pathname?.startsWith("/restrictedportaladminonly")) {
     return null;
   }
 
